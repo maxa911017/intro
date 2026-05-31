@@ -15,6 +15,9 @@
             --gold-light: #f3e5ab;
             --gold-glow: rgba(212, 175, 55, 0.6);
             --bg-dark: #030202; 
+            /* 新增東方朱紅色系 */
+            --door-red: #4a0d0d;
+            --door-red-dark: #230404;
         }
 
         * {
@@ -99,7 +102,7 @@
             background: radial-gradient(circle at center, transparent 30%, var(--bg-dark) 100%);
         }
 
-        /* ================= 開場大門 ================= */
+        /* ================= 開場大門 (古典朱紅色) ================= */
         #gate-container {
             position: absolute; inset: 0; z-index: 100;
             perspective: 2000px;
@@ -110,17 +113,18 @@
         
         .door {
             position: absolute; top: 0; width: 50vw; height: 100vh;
+            /* 調整為朱紅漸層 */
             background-image: 
-                linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.2)),
-                linear-gradient(to bottom, #1a0303, #050000);
-            border: 2px solid #2a0505;
+                linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.1)),
+                linear-gradient(to bottom, var(--door-red), var(--door-red-dark));
+            border: 2px solid #5a1515;
             transition: transform 3.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; align-items: center;
-            box-shadow: inset 0 0 80px rgba(0,0,0,0.9);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
             will-change: transform;
         }
-        .door-left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 3px solid #000; }
-        .door-right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 3px solid #000; }
+        .door-left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 3px solid #1a0303; }
+        .door-right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 3px solid #1a0303; }
         
         .door-ring {
             width: 60px; height: 60px;
@@ -215,6 +219,11 @@
         .fly-through {
             animation: textCinematicFade 9s forwards cubic-bezier(0.25, 1, 0.5, 1);
         }
+        
+        /* 特別針對第一幕的柔和淡入 */
+        .fly-through-soft {
+             animation: textCinematicFadeSoft 9s forwards cubic-bezier(0.25, 1, 0.5, 1);
+        }
 
         @keyframes textCinematicFade {
             0%   { opacity: 0; transform: scale(0.9) translateY(20px) translateZ(0); }
@@ -222,101 +231,78 @@
             80%  { opacity: 1; transform: scale(1.05) translateY(0) translateZ(0); }
             100% { opacity: 0; transform: scale(1.1) translateY(-20px) translateZ(0); }
         }
+        
+        @keyframes textCinematicFadeSoft {
+            0%   { opacity: 0; transform: scale(0.95) translateY(10px) translateZ(0); }
+            30%  { opacity: 1; transform: scale(1) translateY(0) translateZ(0); }
+            80%  { opacity: 1; transform: scale(1.02) translateY(0) translateZ(0); }
+            100% { opacity: 0; transform: scale(1.05) translateY(-10px) translateZ(0); }
+        }
 
         /* ================= 最終揭曉與按鈕 ================= */
         #final-reveal {
             position: absolute; inset: 0; z-index: 20;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 4s ease;
-            background: radial-gradient(circle at center, rgba(10,8,5,0.5) 0%, transparent 100%);
+            background: radial-gradient(circle at center, rgba(10,8,5,0.7) 0%, rgba(3,2,2,0.9) 100%);
         }
         #final-reveal.active { opacity: 1; pointer-events: auto; }
 
         .grand-title {
-            font-size: 2.5rem; font-weight: 400;
-            letter-spacing: 1.2rem; margin-right: -1.2rem; margin-bottom: 4rem;
+            font-size: 2.2rem; font-weight: 400;
+            letter-spacing: 1rem; margin-right: -1rem; margin-bottom: 2rem;
             color: var(--gold-light);
             text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
             opacity: 0; transform: translateY(20px); transition: all 3s ease 1.5s;
         }
         @media (min-width: 768px) {
-            .grand-title { font-size: 4.5rem; letter-spacing: 2rem; margin-right: -2rem; margin-bottom: 5rem; }
+            .grand-title { font-size: 3.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; margin-bottom: 3rem; }
         }
         #final-reveal.active .grand-title { opacity: 1; transform: translateY(0); }
 
-        .enter-portal-btn {
-            position: relative; overflow: hidden;
-            padding: 1.2rem 3.5rem; border: 1px solid var(--gold);
-            background: rgba(212, 175, 55, 0.05); color: #fff;
-            font-size: 1.1rem; font-weight: 300; letter-spacing: 0.6rem; margin-right: -0.6rem;
-            border-radius: 100px; text-decoration: none; backdrop-filter: blur(5px);
-            transition: all 0.6s ease;
+        /* 策展團隊卡片 (直接顯示於畫面上) */
+        .curator-card {
+            background: rgba(10, 8, 8, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 2rem 1rem; width: 95%; max-width: 900px;
+            border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
             opacity: 0; transform: translateY(20px); transition: all 3s ease 2.5s;
+            margin-bottom: 3rem;
+            backdrop-filter: blur(5px);
         }
         @media (min-width: 768px) {
-            .enter-portal-btn { padding: 1.5rem 5rem; font-size: 1.3rem; letter-spacing: 0.8rem; margin-right: -0.8rem; }
+            .curator-card { padding: 3rem 2rem; width: 90%; margin-bottom: 4rem; }
+        }
+        #final-reveal.active .curator-card { opacity: 1; transform: translateY(0); }
+
+        .enter-portal-btn {
+            position: relative; overflow: hidden;
+            padding: 1rem 3rem; border: 1px solid var(--gold);
+            background: rgba(212, 175, 55, 0.1); color: #fff;
+            font-size: 1rem; font-weight: 300; letter-spacing: 0.6rem; margin-right: -0.6rem;
+            border-radius: 100px; text-decoration: none; backdrop-filter: blur(5px);
+            transition: all 0.6s ease;
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 3.5s; /* 最後出現 */
+        }
+        @media (min-width: 768px) {
+            .enter-portal-btn { padding: 1.2rem 4rem; font-size: 1.2rem; letter-spacing: 0.8rem; margin-right: -0.8rem; }
         }
         .enter-portal-btn::before {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 50%);
+            background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 50%);
             animation: rotateGlow 8s linear infinite; pointer-events: none;
         }
         @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
 
         #final-reveal.active .enter-portal-btn { opacity: 1; transform: translateY(0); }
         @media (hover: hover) {
-            .enter-portal-btn:hover { background: rgba(212, 175, 55, 0.15); box-shadow: 0 0 40px rgba(212, 175, 55, 0.3); color: var(--gold-light); transform: scale(1.05); }
+            .enter-portal-btn:hover { background: rgba(212, 175, 55, 0.2); box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); color: var(--gold-light); transform: scale(1.05); }
         }
-
-        .curator-action-btn {
-            margin-top: 2.5rem; display: flex; align-items: center; gap: 0.6rem;
-            background: transparent; border: none; padding: 0.5rem 1rem;
-            color: rgba(255,255,255,0.4); font-size: 0.9rem; font-weight: 300; letter-spacing: 0.3rem; margin-right:-0.3rem;
-            cursor: pointer; transition: all 0.4s;
-            opacity: 0; transform: translateY(10px); transition: all 3s ease 3.5s;
-        }
-        @media (min-width: 768px) {
-            .curator-action-btn { margin-top: 3.5rem; font-size: 1rem; }
-        }
-        #final-reveal.active .curator-action-btn { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .curator-action-btn svg { width: 16px; height: 16px; fill: currentColor; transition: transform 0.3s;}
-        @media (hover: hover) {
-            .curator-action-btn:hover { color: var(--gold); }
-            .curator-action-btn:hover svg { transform: scale(1.2); }
-        }
-
-        /* ================= 策展人彈窗 ================= */
-        #curator-modal {
-            position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
-        }
-        #curator-modal.show { opacity: 1; pointer-events: auto; }
-
-        .curator-content {
-            background: linear-gradient(to bottom, #0a0808, #030202); 
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 3rem 1.5rem; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto;
-            border-radius: 8px; box-shadow: 0 30px 80px rgba(0,0,0,1);
-            position: relative; transform: scale(0.95); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @media (min-width: 768px) {
-            .curator-content { padding: 4rem; }
-        }
-        #curator-modal.show .curator-content { transform: scale(1); }
-        
-        .close-btn {
-            position: absolute; top: 1rem; right: 1.5rem; font-size: 2.5rem; font-weight: 300;
-            color: rgba(255,255,255,0.4); cursor: pointer; line-height: 1; transition: color 0.3s;
-        }
-        @media (hover: hover) { .close-btn:hover { color: var(--gold); } }
-
     </style>
 </head>
 <body>
 
-    <!-- 專屬古風音樂 -->
+    <!-- 專屬古風音樂 (只播一次) -->
     <audio id="bg-music" preload="auto">
         <source src="bgm.mp3" type="audio/mpeg">
     </audio>
@@ -361,55 +347,48 @@
         </div>
     </div>
 
-    <!-- 最終揭曉 -->
+    <!-- 最終揭曉 (包含策展人資訊) -->
     <div id="final-reveal">
         <h1 class="grand-title">花間鏡像：十二紀元的霓裳夢迴</h1>
-        <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="enter-portal-btn">
-            進入全景世界
-        </a>
         
-        <button class="curator-action-btn" onclick="toggleModal(true)">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-            </svg>
-            策展團隊
-        </button>
-    </div>
-
-    <!-- 策展人彈窗 -->
-    <div id="curator-modal">
-        <div class="curator-content">
-            <span class="close-btn" onclick="toggleModal(false)">&times;</span>
-            <div class="flex items-center justify-center gap-4 mb-12 mt-2">
-                <div class="h-[1px] w-10 md:w-16 bg-gradient-to-r from-transparent to-[var(--gold)]"></div>
-                <h2 class="text-xl md:text-2xl tracking-[0.6rem] md:tracking-[1rem] -mr-[0.6rem] md:-mr-[1rem] text-center text-[var(--gold)] font-light">策展人</h2>
-                <div class="h-[1px] w-10 md:w-16 bg-gradient-to-l from-transparent to-[var(--gold)]"></div>
+        <!-- 策展人直接顯示區塊 -->
+        <div class="curator-card">
+            <div class="flex items-center justify-center gap-4 mb-8 md:mb-12">
+                <div class="h-[1px] w-12 md:w-20 bg-gradient-to-r from-transparent to-[var(--gold)]"></div>
+                <h2 class="text-lg md:text-2xl tracking-[0.5rem] md:tracking-[0.8rem] -mr-[0.5rem] md:-mr-[0.8rem] text-center text-[var(--gold)] font-light">策展人</h2>
+                <div class="h-[1px] w-12 md:w-20 bg-gradient-to-l from-transparent to-[var(--gold)]"></div>
             </div>
             
-            <div class="flex flex-col md:flex-row gap-12 md:gap-8">
+            <div class="flex flex-col md:flex-row gap-8 md:gap-16">
                 <!-- 涂聿萱 -->
                 <div class="flex-1 flex flex-col items-center group text-center">
-                    <div class="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border border-[rgba(212,175,55,0.3)] p-1.5 mb-6 transition-all duration-500 group-hover:border-[var(--gold)]">
-                        <img src="https://placehold.co/400x400/111/d4af37?text=涂聿萱照片" alt="涂聿萱" class="w-full h-full object-cover rounded-full filter grayscale-[80%] group-hover:grayscale-0 transition-all duration-500">
+                    <div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border border-[rgba(212,175,55,0.4)] p-1 mb-4 transition-all duration-500 group-hover:border-[var(--gold)]">
+                        <!-- 替換此處 src 為您的照片 -->
+                        <img src="tu.jpg" alt="涂聿萱" class="w-full h-full object-cover rounded-full filter grayscale-[60%] group-hover:grayscale-0 transition-all duration-500">
                     </div>
-                    <h3 class="text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-4">涂聿萱</h3>
-                    <p class="text-sm text-gray-400 font-light leading-loose px-4">
+                    <h3 class="text-lg md:text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-2 md:mb-4">涂聿萱</h3>
+                    <p class="text-xs md:text-sm text-gray-400 font-light leading-relaxed md:leading-loose px-2">
                         互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。
                     </p>
                 </div>
                 
                 <!-- 廖冠皓 -->
                 <div class="flex-1 flex flex-col items-center group text-center">
-                    <div class="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border border-[rgba(212,175,55,0.3)] p-1.5 mb-6 transition-all duration-500 group-hover:border-[var(--gold)]">
-                        <img src="https://placehold.co/400x400/111/d4af37?text=廖冠皓照片" alt="廖冠皓" class="w-full h-full object-cover rounded-full filter grayscale-[80%] group-hover:grayscale-0 transition-all duration-500">
+                    <div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border border-[rgba(212,175,55,0.4)] p-1 mb-4 transition-all duration-500 group-hover:border-[var(--gold)]">
+                        <!-- 替換此處 src 為您的照片 -->
+                        <img src="liao.jpg" alt="廖冠皓" class="w-full h-full object-cover rounded-full filter grayscale-[60%] group-hover:grayscale-0 transition-all duration-500">
                     </div>
-                    <h3 class="text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-4">廖冠皓</h3>
-                    <p class="text-sm text-gray-400 font-light leading-loose px-4">
+                    <h3 class="text-lg md:text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-2 md:mb-4">廖冠皓</h3>
+                    <p class="text-xs md:text-sm text-gray-400 font-light leading-relaxed md:leading-loose px-2">
                         核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。
                     </p>
                 </div>
             </div>
         </div>
+
+        <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="enter-portal-btn">
+            進入全景世界
+        </a>
     </div>
 
     <script>
@@ -461,7 +440,7 @@
             if(hasStarted) return;
             hasStarted = true;
 
-            // 音樂淡入
+            // 音樂淡入 (單次播放，不循環)
             const bgMusic = document.getElementById('bg-music');
             bgMusic.volume = 0;
             const playPromise = bgMusic.play();
@@ -496,22 +475,16 @@
             const q3 = document.getElementById('q3');
             const finalReveal = document.getElementById('final-reveal');
 
-            // 時間軸排程
-            setTimeout(() => { q0.classList.add('fly-through'); }, 500);
+            // 時間軸排程 (第一幕使用柔和淡入，且立刻出現)
+            setTimeout(() => { q0.classList.add('fly-through-soft'); }, 500); 
             setTimeout(() => { q1.classList.add('fly-through'); }, 11500);
             setTimeout(() => { q2.classList.add('fly-through'); }, 21000);
             setTimeout(() => { q3.classList.add('fly-through'); }, 30500);
             
-            // 最終揭曉
+            // 最終揭曉 (所有字句消失後，標題、策展人、按鈕依序浮現)
             setTimeout(() => {
                 finalReveal.classList.add('active');
             }, 40000); 
-        }
-
-        function toggleModal(show) {
-            const modal = document.getElementById('curator-modal');
-            if(show) { modal.classList.add('show'); } 
-            else { modal.classList.remove('show'); }
         }
     </script>
 </body>
