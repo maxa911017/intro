@@ -485,28 +485,6 @@
             setTimeout(() => {
                 finalReveal.classList.add('active');
             }, 40000); 
-
-            // ===== 這裡就是新增的淡出程式碼 =====
-            setTimeout(() => {
-                let currentVol = bgMusic.volume;
-                let fadeOutAudio = setInterval(() => {
-                    if (currentVol > 0.05) {
-                        currentVol -= 0.05; // 每次遞減音量
-                        bgMusic.volume = currentVol;
-                    } else {
-                        bgMusic.volume = 0; // 確保音量歸零
-                        bgMusic.pause();    // 停止播放
-                        clearInterval(fadeOutAudio); // 清除計時器
-                    }
-                }, 200); // 每 200 毫秒降低一次音量，營造柔和淡出感
-            }, 55000); // 總時間 55 秒時執行淡出
-        }
-
-        function toggleModal(show) {
-            const modal = document.getElementById('curator-modal');
-            if(show) { modal.classList.add('show'); } 
-            else { modal.classList.remove('show'); }
-        }
         }
     </script>
 </body>
