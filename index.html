@@ -7,14 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --gold-primary: #d4af37;
-            --gold-light: #f9f1d8;
-            --gold-dark: #8a6d1c;
-            --bg-deep: #0a0505; /* 微帶暗紅的極深色，增添宮廷感 */
+            --gold: #d4af37;
+            --gold-light: #f3e5ab;
+            --gold-glow: rgba(212, 175, 55, 0.6);
+            --bg-dark: #030202; 
         }
 
         * {
@@ -26,339 +26,386 @@
             margin: 0; padding: 0;
             width: 100%; height: 100%;
             overflow: hidden;
-            background-color: var(--bg-deep);
-            /* 全局強制、唯一使用思源宋體 */
+            background-color: var(--bg-dark);
+            /* 全站唯一強制使用思源宋體，展現極致文學質感 */
             font-family: 'Noto Serif TC', serif !important;
             color: #fff;
             user-select: none;
             -webkit-user-select: none;
+            perspective: 1200px;
         }
 
-        /* 流動的金箔光暈背景，零效能負擔 */
-        #ambient-bg {
-            position: absolute; inset: -50%; z-index: 1;
-            background: 
-                radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 70% 70%, rgba(138, 109, 28, 0.08) 0%, transparent 50%);
-            opacity: 0;
-            transition: opacity 4s ease;
-            animation: breatheLight 15s infinite alternate ease-in-out;
-            pointer-events: none;
+        ::-webkit-scrollbar { display: none; }
+
+        /* ================= 動態背景系統 ================= */
+        #immersive-bg {
+            position: absolute; inset: -10%; z-index: 1;
+            opacity: 0; pointer-events: none;
+            transition: opacity 4s ease 1s;
         }
 
-        @keyframes breatheLight {
-            0% { transform: scale(1) translate(0, 0); }
-            100% { transform: scale(1.2) translate(-2%, -2%); }
-        }
-
-        #gate-wrapper {
-            position: absolute; inset: 0; z-index: 100;
-            perspective: 2000px; /* 增加深度感 */
-            display: flex; justify-content: center; align-items: center;
-            background: #000; overflow: hidden;
-            transition: opacity 2s ease 2s;
-        }
-        
-        .gate-door {
-            position: absolute; top: 0; width: 50vw; height: 100vh;
-            background: linear-gradient(to bottom, #1a0202, #050000);
-            border: 1px solid #330808;
-            transition: transform 4s cubic-bezier(0.25, 1, 0.2, 1);
-            display: flex; align-items: center;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        /* 1. 古典意境底圖與緩慢推進 */
+        .bg-image {
+            position: absolute; inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1543325603-997632608466?q=80&w=2000&auto=format&fit=crop'); /* 絕美東方花卉園林意境 */
+            background-size: cover; background-position: center;
+            opacity: 0.15; /* 極度壓暗，作為氛圍底紋 */
+            animation: kenBurns 40s infinite alternate ease-in-out;
             will-change: transform;
         }
-        .gate-door.left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 3px solid #000; }
-        .gate-door.right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 3px solid #000; }
-        
-        .gate-ring-container {
-            margin: 20px;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        @media (min-width: 768px) { .gate-ring-container { margin: 40px; } }
 
-        .gate-ring {
-            width: 70px; height: 70px;
-            border: 4px solid var(--gold-primary); border-radius: 50%;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.9), inset 0 0 10px rgba(212, 175, 55, 0.3);
+        /* 2. 十二花神靈光 (純 CSS 圓形漸層，效能極高) */
+        .spirit-orb {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            will-change: transform;
+        }
+
+        /* 3. 落花系統 */
+        #petals-container {
+            position: absolute; inset: 0; z-index: 3;
+            overflow: hidden; pointer-events: none;
+        }
+        .petal {
+            position: absolute; top: -5vh;
+            width: 12px; height: 12px;
+            background: linear-gradient(135deg, rgba(255, 180, 200, 0.8) 0%, rgba(212, 175, 55, 0.5) 100%);
+            border-radius: 12px 0 12px 0; /* 模擬花瓣形狀 */
+            box-shadow: 0 0 10px rgba(255, 180, 200, 0.3);
+            will-change: transform, opacity;
+        }
+
+        @keyframes kenBurns {
+            0% { transform: scale(1) translateZ(0); }
+            100% { transform: scale(1.15) translateZ(0); }
+        }
+        @keyframes floatOrb {
+            0% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(5vw, 10vh, 0) scale(1.2); }
+            100% { transform: translate3d(-5vw, -5vh, 0) scale(0.9); }
+        }
+        @keyframes fallPetal {
+            0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translate3d(20vw, 110vh, 0) rotate(720deg); opacity: 0; }
+        }
+
+        /* 暗角與遮罩，確保文字清晰 */
+        .vignette {
+            position: absolute; inset: 0; z-index: 4; pointer-events: none;
+            background: radial-gradient(circle at center, transparent 30%, var(--bg-dark) 100%);
+        }
+
+        /* ================= 開場大門 ================= */
+        #gate-container {
+            position: absolute; inset: 0; z-index: 100;
+            perspective: 2000px;
+            display: flex; justify-content: center; align-items: center;
+            background: #000; overflow: hidden;
+            transition: transform 4s cubic-bezier(0.25, 1, 0.2, 1), opacity 2s ease 2s;
+        }
+        
+        .door {
+            position: absolute; top: 0; width: 50vw; height: 100vh;
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.2)),
+                linear-gradient(to bottom, #1a0303, #050000);
+            border: 2px solid #2a0505;
+            transition: transform 3.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.9);
+            will-change: transform;
+        }
+        .door-left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 3px solid #000; }
+        .door-right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 3px solid #000; }
+        
+        .door-ring {
+            width: 60px; height: 60px;
+            border: 3px solid var(--gold); border-radius: 50%;
+            margin: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.9), inset 0 0 15px var(--gold-glow);
             position: relative;
         }
-        .gate-ring::after {
+        @media (min-width: 768px) {
+            .door-ring { width: 80px; height: 80px; margin: 40px; border-width: 4px; }
+        }
+        .door-ring::after {
             content: ''; position: absolute;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 24px; height: 24px; background: var(--gold-primary);
+            width: 16px; height: 16px; background: var(--gold);
             border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
         }
 
-        /* 開門觸控區置中、優化排版 */
-        .gate-trigger {
-            position: absolute; z-index: 110; top: 60%; left: 50%; transform: translateX(-50%);
+        .gate-action-area {
+            position: absolute; z-index: 110;
+            top: 65%;
             display: flex; flex-direction: column; align-items: center; gap: 1rem;
-            cursor: pointer; padding: 2rem;
-            transition: transform 0.3s ease;
+            cursor: pointer; transition: transform 0.4s ease;
+            padding: 2rem;
         }
         
-        .gate-trigger-icon {
-            width: 32px; height: 32px; fill: none; stroke: var(--gold-light); stroke-width: 1.5;
-            filter: drop-shadow(0 0 8px var(--gold-primary));
-            animation: bounceSoft 3s infinite ease-in-out;
+        .gate-icon {
+            width: 32px; height: 32px;
+            fill: none; stroke: var(--gold-light); stroke-width: 1;
+            filter: drop-shadow(0 0 10px var(--gold-glow));
+            animation: floatIcon 4s ease-in-out infinite;
         }
 
-        .gate-trigger-text {
-            color: var(--gold-light); font-size: 1.4rem; font-weight: 300;
+        .gate-text {
+            color: var(--gold-light); font-size: 1.2rem; font-weight: 300;
             letter-spacing: 0.8rem; margin-right: -0.8rem;
-            text-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); 
         }
-
         @media (min-width: 768px) {
-            .gate-trigger { top: 65%; gap: 1.5rem; }
-            .gate-trigger-icon { width: 40px; height: 40px; }
-            .gate-trigger-text { font-size: 1.8rem; letter-spacing: 1.2rem; margin-right: -1.2rem; }
+            .gate-action-area { top: 65%; gap: 1.5rem; }
+            .gate-icon { width: 40px; height: 40px; }
+            .gate-text { font-size: 1.5rem; letter-spacing: 1.2rem; margin-right: -1.2rem; }
         }
 
-        @keyframes bounceSoft {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); opacity: 0.8; }
+            50% { transform: translateY(-8px); opacity: 1; }
         }
-
+        
         @media (hover: hover) {
-            .gate-trigger:hover { transform: translateX(-50%) scale(1.05); }
-            .gate-trigger:hover .gate-trigger-text { color: #fff; text-shadow: 0 0 25px var(--gold-primary); }
+            .gate-action-area:hover { transform: scale(1.05); }
+            .gate-action-area:hover .gate-icon { filter: drop-shadow(0 0 20px var(--gold)); stroke-width: 1.5; }
+            .gate-action-area:hover .gate-text { text-shadow: 0 0 25px var(--gold); color: #fff;}
         }
 
-        /* 開門動畫狀態 */
-        .is-opening .gate-door.left { transform: rotateY(-105deg); }
-        .is-opening .gate-door.right { transform: rotateY(105deg); }
-        .is-opening .gate-trigger { opacity: 0; pointer-events: none; }
-        .is-hidden { opacity: 0; pointer-events: none; }
+        #gate-container.opened .door-left { transform: rotateY(-105deg) translateZ(0); }
+        #gate-container.opened .door-right { transform: rotateY(105deg) translateZ(0); }
+        #gate-container.opened .gate-action-area { opacity: 0; pointer-events: none; transform: scale(1.2); }
+        #gate-container.opened { transform: scale(1.2); } 
+        #gate-container.fade-out { opacity: 0; pointer-events: none; }
 
-        #movie-sequence {
+        /* ================= 電影引言 ================= */
+        #cinematic-sequence {
             position: absolute; inset: 0; z-index: 10;
             display: flex; justify-content: center; align-items: center;
-            pointer-events: none; perspective: 1000px;
+            pointer-events: none; transform-style: preserve-3d;
         }
 
-        .movie-quote {
+        .quote {
             position: absolute; text-align: center; width: 85%; max-width: 800px;
-            opacity: 0; transform: scale(0.9);
+            opacity: 0; transform: scale(0.9) translate3d(0, 20px, 0);
             will-change: transform, opacity;
             display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
         }
 
-        .movie-text-main {
+        .quote-main {
             font-size: 1.6rem; font-weight: 300; color: #fff;
-            letter-spacing: 0.5rem; margin-right: -0.5rem; line-height: 1.8;
-            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+            letter-spacing: 0.6rem; margin-right: -0.6rem; line-height: 2;
+            text-shadow: 0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(212,175,55,0.15);
         }
         
-        .movie-text-sub {
-            font-size: 1rem; font-weight: 300; color: var(--gold-primary);
+        .quote-sub {
+            font-size: 0.9rem; color: var(--gold); font-weight: 300;
             letter-spacing: 0.4rem; margin-right: -0.4rem; opacity: 0.8;
         }
 
         @media (min-width: 768px) {
-            .movie-quote { gap: 2rem; }
-            .movie-text-main { font-size: 3rem; letter-spacing: 1rem; margin-right: -1rem; }
-            .movie-text-sub { font-size: 1.2rem; letter-spacing: 0.6rem; margin-right: -0.6rem; }
+            .quote-main { font-size: 2.8rem; letter-spacing: 1rem; margin-right: -1rem; line-height: 2.2; }
+            .quote-sub { font-size: 1.1rem; letter-spacing: 0.6rem; margin-right: -0.6rem; }
         }
 
-        /* 優雅平滑的文字推進特效 */
-        .animate-quote {
-            animation: cinematicFade 8s forwards ease-in-out;
+        .fly-through {
+            animation: textCinematicFade 9s forwards cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        @keyframes cinematicFade {
-            0%   { opacity: 0; transform: scale(0.95) translateY(10px); filter: blur(4px); }
-            20%  { opacity: 1; transform: scale(1) translateY(0); filter: blur(0px); }
-            80%  { opacity: 1; transform: scale(1.05) translateY(0); filter: blur(0px); }
-            100% { opacity: 0; transform: scale(1.1) translateY(-10px); filter: blur(4px); }
+        @keyframes textCinematicFade {
+            0%   { opacity: 0; transform: scale(0.9) translateY(20px) translateZ(0); }
+            20%  { opacity: 1; transform: scale(1) translateY(0) translateZ(0); }
+            80%  { opacity: 1; transform: scale(1.05) translateY(0) translateZ(0); }
+            100% { opacity: 0; transform: scale(1.1) translateY(-20px) translateZ(0); }
         }
 
-        #final-screen {
+        /* ================= 最終揭曉與按鈕 ================= */
+        #final-reveal {
             position: absolute; inset: 0; z-index: 20;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: radial-gradient(circle at center, rgba(10,5,5,0.7) 0%, var(--bg-deep) 100%);
-            opacity: 0; pointer-events: none; transition: opacity 3s ease;
+            opacity: 0; pointer-events: none; transition: opacity 4s ease;
+            background: radial-gradient(circle at center, rgba(10,8,5,0.5) 0%, transparent 100%);
         }
-        #final-screen.is-active { opacity: 1; pointer-events: auto; }
+        #final-reveal.active { opacity: 1; pointer-events: auto; }
 
-        .final-title {
-            font-size: 2.2rem; font-weight: 500;
-            letter-spacing: 0.8rem; margin-right: -0.8rem; margin-bottom: 3.5rem;
+        .grand-title {
+            font-size: 2.5rem; font-weight: 400;
+            letter-spacing: 1.2rem; margin-right: -1.2rem; margin-bottom: 4rem;
             color: var(--gold-light);
             text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
-            opacity: 0; transform: translateY(20px); transition: all 2s ease 1s;
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 1.5s;
         }
         @media (min-width: 768px) {
-            .final-title { font-size: 4.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; margin-bottom: 5rem; }
+            .grand-title { font-size: 4.5rem; letter-spacing: 2rem; margin-right: -2rem; margin-bottom: 5rem; }
         }
-        #final-screen.is-active .final-title { opacity: 1; transform: translateY(0); }
+        #final-reveal.active .grand-title { opacity: 1; transform: translateY(0); }
 
-        .action-button {
+        .enter-portal-btn {
             position: relative; overflow: hidden;
-            padding: 1.2rem 3rem; border: 1px solid rgba(212, 175, 55, 0.5);
+            padding: 1.2rem 3.5rem; border: 1px solid var(--gold);
             background: rgba(212, 175, 55, 0.05); color: #fff;
-            font-size: 1.1rem; font-weight: 400; letter-spacing: 0.5rem; margin-right: -0.5rem;
+            font-size: 1.1rem; font-weight: 300; letter-spacing: 0.6rem; margin-right: -0.6rem;
             border-radius: 100px; text-decoration: none; backdrop-filter: blur(5px);
-            opacity: 0; transform: translateY(20px); transition: all 2s ease 2s;
+            transition: all 0.6s ease;
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 2.5s;
         }
         @media (min-width: 768px) {
-            .action-button { padding: 1.5rem 5rem; font-size: 1.5rem; letter-spacing: 0.8rem; margin-right: -0.8rem; }
+            .enter-portal-btn { padding: 1.5rem 5rem; font-size: 1.3rem; letter-spacing: 0.8rem; margin-right: -0.8rem; }
         }
-        #final-screen.is-active .action-button { opacity: 1; transform: translateY(0); }
-        
-        .action-button::before {
+        .enter-portal-btn::before {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%);
-            animation: rotateGlow 6s linear infinite; pointer-events: none;
+            background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 50%);
+            animation: rotateGlow 8s linear infinite; pointer-events: none;
         }
         @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
 
+        #final-reveal.active .enter-portal-btn { opacity: 1; transform: translateY(0); }
         @media (hover: hover) {
-            .action-button:hover {
-                background: rgba(212, 175, 55, 0.15); border-color: var(--gold-primary);
-                box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); color: var(--gold-light);
-            }
+            .enter-portal-btn:hover { background: rgba(212, 175, 55, 0.15); box-shadow: 0 0 40px rgba(212, 175, 55, 0.3); color: var(--gold-light); transform: scale(1.05); }
         }
 
-        .curator-btn {
-            margin-top: 3rem; display: flex; align-items: center; gap: 0.6rem;
+        .curator-action-btn {
+            margin-top: 2.5rem; display: flex; align-items: center; gap: 0.6rem;
             background: transparent; border: none; padding: 0.5rem 1rem;
-            color: rgba(255,255,255,0.5); font-size: 0.9rem; font-weight: 300; letter-spacing: 0.2rem;
-            cursor: pointer; opacity: 0; transform: translateY(15px); transition: all 2s ease 3s;
+            color: rgba(255,255,255,0.4); font-size: 0.9rem; font-weight: 300; letter-spacing: 0.3rem; margin-right:-0.3rem;
+            cursor: pointer; transition: all 0.4s;
+            opacity: 0; transform: translateY(10px); transition: all 3s ease 3.5s;
         }
         @media (min-width: 768px) {
-            .curator-btn { margin-top: 4rem; font-size: 1rem; letter-spacing: 0.3rem; }
+            .curator-action-btn { margin-top: 3.5rem; font-size: 1rem; }
         }
-        #final-screen.is-active .curator-btn { opacity: 1; transform: translateY(0); }
-        .curator-btn svg { width: 16px; height: 16px; fill: currentColor; }
+        #final-reveal.active .curator-action-btn { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .curator-action-btn svg { width: 16px; height: 16px; fill: currentColor; transition: transform 0.3s;}
         @media (hover: hover) {
-            .curator-btn:hover { color: var(--gold-primary); }
+            .curator-action-btn:hover { color: var(--gold); }
+            .curator-action-btn:hover svg { transform: scale(1.2); }
         }
 
-        #modal-overlay {
+        /* ================= 策展人彈窗 ================= */
+        #curator-modal {
             position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
             display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
         }
-        #modal-overlay.is-open { opacity: 1; pointer-events: auto; }
+        #curator-modal.show { opacity: 1; pointer-events: auto; }
 
-        .modal-box {
-            background: #0d0a0a; border: 1px solid rgba(212, 175, 55, 0.3);
+        .curator-content {
+            background: linear-gradient(to bottom, #0a0808, #030202); 
+            border: 1px solid rgba(212, 175, 55, 0.2);
             padding: 3rem 1.5rem; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto;
-            border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,1);
-            transform: scale(0.95); transition: transform 0.4s ease; position: relative;
+            border-radius: 8px; box-shadow: 0 30px 80px rgba(0,0,0,1);
+            position: relative; transform: scale(0.95); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @media (min-width: 768px) { .modal-box { padding: 4rem; } }
-        #modal-overlay.is-open .modal-box { transform: scale(1); }
-
-        .modal-close {
-            position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem; font-weight: 300;
-            color: rgba(255,255,255,0.5); cursor: pointer; line-height: 1;
+        @media (min-width: 768px) {
+            .curator-content { padding: 4rem; }
         }
-
-        .curator-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .curator-img {
-            width: 140px; height: 140px; border-radius: 50%; object-fit: cover;
-            border: 2px solid rgba(212, 175, 55, 0.4); padding: 4px; margin-bottom: 1.5rem;
-        }
-        @media (min-width: 768px) { .curator-img { width: 180px; height: 180px; margin-bottom: 2rem; } }
+        #curator-modal.show .curator-content { transform: scale(1); }
         
-        .curator-name {
-            font-size: 1.5rem; font-weight: 500; color: #fff; letter-spacing: 0.4rem; margin-right: -0.4rem; margin-bottom: 0.8rem;
+        .close-btn {
+            position: absolute; top: 1rem; right: 1.5rem; font-size: 2.5rem; font-weight: 300;
+            color: rgba(255,255,255,0.4); cursor: pointer; line-height: 1; transition: color 0.3s;
         }
-        .curator-desc {
-            font-size: 0.95rem; font-weight: 300; color: #aaa; line-height: 1.8; letter-spacing: 0.05rem;
-        }
+        @media (hover: hover) { .close-btn:hover { color: var(--gold); } }
 
     </style>
 </head>
 <body>
 
-    <!-- 背景音樂 -->
-    <audio id="bgm" loop preload="auto">
+    <!-- 專屬古風音樂 -->
+    <audio id="bg-music" loop preload="auto">
         <source src="【古风纯音乐】绝美古装剧背景音乐：忘前尘 - 古風Relaxing Music (youtube).mp3" type="audio/mpeg">
     </audio>
 
-    <!-- 環境光暈 -->
-    <div id="ambient-bg"></div>
+    <!-- 沉浸式十二花神動態背景 -->
+    <div id="immersive-bg">
+        <div class="bg-image"></div>
+        <div id="spirits-container"></div>
+        <div id="petals-container"></div>
+        <div class="vignette"></div>
+    </div>
 
     <!-- 開場大門 -->
-    <div id="gate-wrapper">
-        <div class="gate-door left"><div class="gate-ring-container"><div class="gate-ring"></div></div></div>
-        <div class="gate-door right"><div class="gate-ring-container"><div class="gate-ring"></div></div></div>
+    <div id="gate-container">
+        <div class="door door-left"><div class="door-ring"></div></div>
+        <div class="door door-right"><div class="door-ring"></div></div>
         
-        <div class="gate-trigger" onclick="launchExperience()">
-            <svg class="gate-trigger-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <div class="gate-action-area" onclick="startCinematic()" ontouchstart="startCinematic()">
+            <svg class="gate-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C12 2 5 6 5 13C5 17 8 20 12 22C16 20 19 17 19 13C19 6 12 2 12 2Z" />
                 <path d="M12 22C12 22 17 18 17 13C17 9 14 6 12 4C10 6 7 9 7 13C7 18 12 22 12 22Z" />
                 <circle cx="12" cy="15" r="2" fill="currentColor" stroke="none"/>
             </svg>
-            <div class="gate-trigger-text">推開大觀園</div>
+            <div class="gate-text">推開大觀園</div>
         </div>
     </div>
 
-    <!-- 電影引言序列 -->
-    <div id="movie-sequence">
-        <div class="movie-quote" id="text-1">
-            <span class="movie-text-main">太虛幻境，大夢初醒。</span>
+    <!-- 融合三折頁的電影引言 -->
+    <div id="cinematic-sequence">
+        <div class="quote" id="q0">
+            <span class="quote-main">太虛幻境，大夢初醒。</span>
         </div>
-        <div class="movie-quote" id="text-2">
-            <span class="movie-text-main">春夢隨雲散，飛花逐水流。</span>
+        <div class="quote" id="q1">
+            <span class="quote-main">百花有靈，神韻天成。</span>
+            <span class="quote-sub">十二花神，以花為名，以詩傳情</span>
         </div>
-        <div class="movie-quote" id="text-3">
-            <span class="movie-text-main">十二月令，十二花神。</span>
-            <span class="movie-text-sub">散落人間的節氣與風華</span>
+        <div class="quote" id="q2">
+            <span class="quote-main">對自然之美與生命之頌。</span>
         </div>
-        <div class="movie-quote" id="text-4">
-            <span class="movie-text-main">跨越虛實的界線，<br>凝聽，花開的聲音。</span>
+        <div class="quote" id="q3">
+            <span class="quote-main">願您在花神的陪伴下，<br>遇見詩憶，遇見美好。</span>
         </div>
     </div>
 
-    <!-- 最終揭曉介面 -->
-    <div id="final-screen">
-        <h1 class="final-title">大觀園十二花神</h1>
-        <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="action-button">
+    <!-- 最終揭曉 -->
+    <div id="final-reveal">
+        <h1 class="grand-title">大觀園十二花神</h1>
+        <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="enter-portal-btn">
             進入全景世界
         </a>
         
-        <button class="curator-btn" onclick="openModal()">
+        <button class="curator-action-btn" onclick="toggleModal(true)">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
             </svg>
             策展團隊
         </button>
     </div>
 
     <!-- 策展人彈窗 -->
-    <div id="modal-overlay">
-        <div class="modal-box">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-            
-            <div class="flex items-center justify-center gap-4 mb-10 mt-2">
-                <div class="h-[1px] w-12 bg-gradient-to-r from-transparent to-[var(--gold-primary)]"></div>
-                <h2 class="text-2xl tracking-[0.6rem] -mr-[0.6rem] text-[var(--gold-primary)] font-medium">策展人</h2>
-                <div class="h-[1px] w-12 bg-gradient-to-l from-transparent to-[var(--gold-primary)]"></div>
+    <div id="curator-modal">
+        <div class="curator-content">
+            <span class="close-btn" onclick="toggleModal(false)">&times;</span>
+            <div class="flex items-center justify-center gap-4 mb-12 mt-2">
+                <div class="h-[1px] w-10 md:w-16 bg-gradient-to-r from-transparent to-[var(--gold)]"></div>
+                <h2 class="text-xl md:text-2xl tracking-[0.6rem] md:tracking-[1rem] -mr-[0.6rem] md:-mr-[1rem] text-center text-[var(--gold)] font-light">策展人</h2>
+                <div class="h-[1px] w-10 md:w-16 bg-gradient-to-l from-transparent to-[var(--gold)]"></div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-8">
-                <!-- 廖冠皓 -->
-                <div class="curator-card">
-                    <!-- 若要換照片，請更改 src 的網址 -->
-                    <img src="https://placehold.co/400x400/1a1a1a/d4af37?text=廖冠皓\n(請替換)" alt="廖冠皓" class="curator-img">
-                    <h3 class="curator-name">廖冠皓</h3>
-                    <p class="curator-desc">
-                        核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。
+            <div class="flex flex-col md:flex-row gap-12 md:gap-8">
+                <!-- 涂聿萱 -->
+                <div class="flex-1 flex flex-col items-center group text-center">
+                    <div class="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border border-[rgba(212,175,55,0.3)] p-1.5 mb-6 transition-all duration-500 group-hover:border-[var(--gold)]">
+                        <img src="https://placehold.co/400x400/111/d4af37?text=涂聿萱照片" alt="涂聿萱" class="w-full h-full object-cover rounded-full filter grayscale-[80%] group-hover:grayscale-0 transition-all duration-500">
+                    </div>
+                    <h3 class="text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-4">涂聿萱</h3>
+                    <p class="text-sm text-gray-400 font-light leading-loose px-4">
+                        互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。
                     </p>
                 </div>
-                <!-- 涂聿萱 -->
-                <div class="curator-card">
-                    <!-- 若要換照片，請更改 src 的網址 -->
-                    <img src="https://placehold.co/400x400/1a1a1a/d4af37?text=涂聿萱\n(請替換)" alt="涂聿萱" class="curator-img">
-                    <h3 class="curator-name">涂聿萱</h3>
-                    <p class="curator-desc">
-                        互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。
+                
+                <!-- 廖冠皓 -->
+                <div class="flex-1 flex flex-col items-center group text-center">
+                    <div class="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border border-[rgba(212,175,55,0.3)] p-1.5 mb-6 transition-all duration-500 group-hover:border-[var(--gold)]">
+                        <img src="https://placehold.co/400x400/111/d4af37?text=廖冠皓照片" alt="廖冠皓" class="w-full h-full object-cover rounded-full filter grayscale-[80%] group-hover:grayscale-0 transition-all duration-500">
+                    </div>
+                    <h3 class="text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-4">廖冠皓</h3>
+                    <p class="text-sm text-gray-400 font-light leading-loose px-4">
+                        核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。
                     </p>
                 </div>
             </div>
@@ -366,67 +413,105 @@
     </div>
 
     <script>
-        let isStarted = false;
+        let hasStarted = false;
 
-        function launchExperience() {
-            if(isStarted) return;
-            isStarted = true;
-
-            // 1. 處理音樂淡入
-            const bgm = document.getElementById('bgm');
-            bgm.volume = 0;
-            const playPromise = bgm.play();
+        // 生成十二道花神靈光與落花
+        function createDynamicBackground() {
+            const spiritsContainer = document.getElementById('spirits-container');
+            const petalsContainer = document.getElementById('petals-container');
             
+            // 12 花神代表色
+            const spiritColors = [
+                '#ff4d4d', '#ffb3b3', '#ff99cc', '#ff3366', 
+                '#ff3300', '#ffccff', '#cc0052', '#ffcc00', 
+                '#ffdd33', '#ff6699', '#cc0000', '#ffffcc'
+            ];
+
+            // 生成靈光
+            spiritColors.forEach((color, index) => {
+                const orb = document.createElement('div');
+                orb.className = 'spirit-orb';
+                const size = Math.random() * 30 + 30; // 30vw - 60vw
+                orb.style.width = `${size}vw`;
+                orb.style.height = `${size}vw`;
+                orb.style.background = `radial-gradient(circle, ${color} 0%, transparent 60%)`;
+                orb.style.left = `${Math.random() * 100 - 20}vw`;
+                orb.style.top = `${Math.random() * 100 - 20}vh`;
+                
+                // 每顆光暈隨機漂浮動畫
+                orb.style.animation = `floatOrb ${Math.random() * 20 + 20}s infinite alternate ease-in-out`;
+                orb.style.animationDelay = `-${Math.random() * 20}s`;
+                
+                spiritsContainer.appendChild(orb);
+            });
+
+            // 生成落花
+            for (let i = 0; i < 30; i++) {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.style.left = `${Math.random() * 100}vw`;
+                petal.style.animation = `fallPetal ${Math.random() * 6 + 6}s infinite linear`;
+                petal.style.animationDelay = `${Math.random() * 10}s`;
+                petalsContainer.appendChild(petal);
+            }
+        }
+
+        function startCinematic(e) {
+            if(e) e.preventDefault();
+            if(hasStarted) return;
+            hasStarted = true;
+
+            // 音樂淡入
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.volume = 0;
+            const playPromise = bgMusic.play();
             if (playPromise !== undefined) {
                 playPromise.then(_ => {
                     let vol = 0;
-                    let fade = setInterval(() => {
-                        if (vol < 0.7) {
-                            vol += 0.05;
-                            bgm.volume = Math.min(0.7, vol);
+                    let fadeAudio = setInterval(() => {
+                        if (vol < 0.6) {
+                            vol = Math.min(0.6, vol + 0.05);
+                            bgMusic.volume = vol;
                         } else {
-                            clearInterval(fade);
+                            clearInterval(fadeAudio);
                         }
                     }, 200);
-                }).catch(e => console.log("Audio play prevented:", e));
+                }).catch(error => { console.log("Audio play prevented:", error); });
             }
 
-            // 2. 開門動畫
-            const gate = document.getElementById('gate-wrapper');
-            gate.classList.add('is-opening');
-            
-            // 啟動背景氛圍光
-            document.getElementById('ambient-bg').style.opacity = '1';
-            
-            // 門淡出移除
-            setTimeout(() => gate.classList.add('is-hidden'), 3000);
+            // 初始化背景
+            createDynamicBackground();
+            document.getElementById('immersive-bg').style.opacity = '1';
+
+            // 開門動畫
+            const gate = document.getElementById('gate-container');
+            gate.classList.add('opened');
+            setTimeout(() => gate.classList.add('fade-out'), 3000);
             setTimeout(() => { gate.style.display = 'none'; }, 5000);
 
-            // 3. 電影引言時間軸 (精準控制 CSS 動畫)
-            const text1 = document.getElementById('text-1');
-            const text2 = document.getElementById('text-2');
-            const text3 = document.getElementById('text-3');
-            const text4 = document.getElementById('text-4');
-            const finalScreen = document.getElementById('final-screen');
+            // 電影引言序列
+            const q0 = document.getElementById('q0');
+            const q1 = document.getElementById('q1');
+            const q2 = document.getElementById('q2');
+            const q3 = document.getElementById('q3');
+            const finalReveal = document.getElementById('final-reveal');
 
-            // 每一句播放時間為 8 秒 (CSS 動畫設定為 8s)
-            setTimeout(() => text1.classList.add('animate-quote'), 2000);
-            setTimeout(() => text2.classList.add('animate-quote'), 8500);
-            setTimeout(() => text3.classList.add('animate-quote'), 15000);
-            setTimeout(() => text4.classList.add('animate-quote'), 21500);
+            // 時間軸排程
+            setTimeout(() => { q0.classList.add('fly-through'); }, 2000);
+            setTimeout(() => { q1.classList.add('fly-through'); }, 9000);
+            setTimeout(() => { q2.classList.add('fly-through'); }, 16000);
+            setTimeout(() => { q3.classList.add('fly-through'); }, 23000);
             
-            // 4. 最終揭曉
+            // 最終揭曉
             setTimeout(() => {
-                finalScreen.classList.add('is-active');
-            }, 29500); 
+                finalReveal.classList.add('active');
+            }, 30500); 
         }
 
-        function openModal() {
-            document.getElementById('modal-overlay').classList.add('is-open');
-        }
-
-        function closeModal() {
-            document.getElementById('modal-overlay').classList.remove('is-open');
+        function toggleModal(show) {
+            const modal = document.getElementById('curator-modal');
+            if(show) { modal.classList.add('show'); } 
+            else { modal.classList.remove('show'); }
         }
     </script>
 </body>
