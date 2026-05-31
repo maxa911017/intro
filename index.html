@@ -486,8 +486,8 @@
             // 開門動畫
             const gate = document.getElementById('gate-container');
             gate.classList.add('opened');
-            setTimeout(() => gate.classList.add('fade-out'), 3000);
-            setTimeout(() => { gate.style.display = 'none'; }, 5000);
+            setTimeout(() => gate.classList.add('fade-out'), 2000);
+            setTimeout(() => { gate.style.display = 'none'; }, 4000);
 
             // 電影引言序列
             const q0 = document.getElementById('q0');
@@ -498,14 +498,14 @@
 
             // 時間軸排程
             setTimeout(() => { q0.classList.add('fly-through'); }, 2000);
-            setTimeout(() => { q1.classList.add('fly-through'); }, 9000);
-            setTimeout(() => { q2.classList.add('fly-through'); }, 16000);
-            setTimeout(() => { q3.classList.add('fly-through'); }, 23000);
+            setTimeout(() => { q1.classList.add('fly-through'); }, 11500);
+            setTimeout(() => { q2.classList.add('fly-through'); }, 21000);
+            setTimeout(() => { q3.classList.add('fly-through'); }, 305000);
             
             // 最終揭曉
             setTimeout(() => {
                 finalReveal.classList.add('active');
-            }, 30500); 
+            }, 40000); 
         }
 
         function toggleModal(show) {
