@@ -3,316 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>大觀園十二花神 - 電影前導劇場</title>
+    <title>大觀園十二花神 - 宮廷前導劇場</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --gold: #d4af37;
-            --gold-light: #f3e5ab;
-            --gold-glow: rgba(212, 175, 55, 0.6);
-            --bg-dark: #030202; 
-            /* 新增東方朱紅色系 */
-            --door-red: #4a0d0d;
-            --door-red-dark: #230404;
+            --imperial-gold: #d4af37;
+            --imperial-gold-light: #f3e5ab;
+            --imperial-gold-dark: #aa8421;
+            --imperial-red: #7a1111;
+            --imperial-red-dark: #3a0202;
+            --ink-black: #050202;
+            --gold-glow: rgba(212, 175, 55, 0.5);
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background-color: var(--bg-dark);
-            /* 全站唯一強制使用思源宋體，展現極致文學質感 */
-            font-family: 'Noto Serif TC', serif !important;
-            color: #fff;
-            user-select: none;
-            -webkit-user-select: none;
-            perspective: 1200px;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: var(--ink-black);
+            font-family: 'Noto Serif TC', serif !important; color: #fff;
+            user-select: none; -webkit-user-select: none;
         }
 
-        ::-webkit-scrollbar { display: none; }
-
-        /* ================= 動態背景系統 ================= */
-        #immersive-bg {
-            position: absolute; inset: -10%; z-index: 1;
-            opacity: 0; pointer-events: none;
-            transition: opacity 4s ease 1s;
+        #canvas-container {
+            position: absolute; inset: 0; z-index: 1;
+            opacity: 0; transition: opacity 3s ease 1s;
         }
 
-        /* 1. 古典意境底圖與緩慢推進 */
-        .bg-image {
-            position: absolute; inset: 0;
-            background-image: url('https://images.unsplash.com/photo-1543325603-997632608466?q=80&w=2000&auto=format&fit=crop'); /* 絕美東方花卉園林意境 */
-            background-size: cover; background-position: center;
-            opacity: 0.15; /* 極度壓暗，作為氛圍底紋 */
-            animation: kenBurns 40s infinite alternate ease-in-out;
-            will-change: transform;
+        #ui-layer {
+            position: absolute; inset: 0; z-index: 10;
+            pointer-events: none; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
+        
+        .interactive { pointer-events: auto; }
 
-        /* 2. 十二花神靈光 (純 CSS 圓形漸層，效能極高) */
-        .spirit-orb {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.4;
-            mix-blend-mode: screen;
-            will-change: transform;
+        .palace-frame {
+            position: absolute; inset: 15px; z-index: 5; pointer-events: none;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            opacity: 0; transition: opacity 4s ease 2s;
         }
+        @media (min-width: 768px) { .palace-frame { inset: 30px; } }
+        
+        .corner-tl { position: absolute; top: -2px; left: -2px; width: 30px; height: 30px; border-top: 2px solid var(--imperial-gold); border-left: 2px solid var(--imperial-gold); }
+        .corner-tr { position: absolute; top: -2px; right: -2px; width: 30px; height: 30px; border-top: 2px solid var(--imperial-gold); border-right: 2px solid var(--imperial-gold); }
+        .corner-bl { position: absolute; bottom: -2px; left: -2px; width: 30px; height: 30px; border-bottom: 2px solid var(--imperial-gold); border-left: 2px solid var(--imperial-gold); }
+        .corner-br { position: absolute; bottom: -2px; right: -2px; width: 30px; height: 30px; border-bottom: 2px solid var(--imperial-gold); border-right: 2px solid var(--imperial-gold); }
 
-        /* 3. 落花系統 */
-        #petals-container {
-            position: absolute; inset: 0; z-index: 3;
-            overflow: hidden; pointer-events: none;
-        }
-        .petal {
-            position: absolute; top: -5vh;
-            width: 12px; height: 12px;
-            background: linear-gradient(135deg, rgba(255, 180, 200, 0.8) 0%, rgba(212, 175, 55, 0.5) 100%);
-            border-radius: 12px 0 12px 0; /* 模擬花瓣形狀 */
-            box-shadow: 0 0 10px rgba(255, 180, 200, 0.3);
-            will-change: transform, opacity;
-        }
-
-        @keyframes kenBurns {
-            0% { transform: scale(1) translateZ(0); }
-            100% { transform: scale(1.15) translateZ(0); }
-        }
-        @keyframes floatOrb {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            50% { transform: translate3d(5vw, 10vh, 0) scale(1.2); }
-            100% { transform: translate3d(-5vw, -5vh, 0) scale(0.9); }
-        }
-        @keyframes fallPetal {
-            0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.6; }
-            90% { opacity: 0.6; }
-            100% { transform: translate3d(20vw, 110vh, 0) rotate(720deg); opacity: 0; }
-        }
-
-        /* 暗角與遮罩，確保文字清晰 */
-        .vignette {
-            position: absolute; inset: 0; z-index: 4; pointer-events: none;
-            background: radial-gradient(circle at center, transparent 30%, var(--bg-dark) 100%);
-        }
-
-        /* ================= 開場大門 (古典朱紅色) ================= */
         #gate-container {
-            position: absolute; inset: 0; z-index: 100;
-            perspective: 2000px;
-            display: flex; justify-content: center; align-items: center;
-            background: #000; overflow: hidden;
-            transition: transform 4s cubic-bezier(0.25, 1, 0.2, 1), opacity 2s ease 2s;
+            position: absolute; inset: 0; z-index: 100; perspective: 2000px;
+            display: flex; justify-content: center; align-items: center; background: #000;
+            transition: transform 4.5s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 2s ease 2.5s;
+            pointer-events: auto;
         }
         
         .door {
             position: absolute; top: 0; width: 50vw; height: 100vh;
-            /* 調整為朱紅漸層 */
-            background-image: 
-                linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.1)),
-                linear-gradient(to bottom, var(--door-red), var(--door-red-dark));
-            border: 2px solid #5a1515;
-            transition: transform 3.5s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; align-items: center;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
-            will-change: transform;
+            background-image: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.2)), linear-gradient(to bottom, var(--imperial-red), var(--imperial-red-dark));
+            border: 2px solid #2a0202; display: flex; align-items: center; box-shadow: inset 0 0 100px rgba(0,0,0,0.95);
+            transition: transform 4s cubic-bezier(0.4, 0, 0.1, 1); will-change: transform;
+            overflow: hidden;
         }
-        .door-left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 3px solid #1a0303; }
-        .door-right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 3px solid #1a0303; }
         
+        /* 宮門九路釘 (皇家象徵) */
+        .door::before {
+            content: ''; position: absolute; top: 5%; bottom: 5%; left: 5%; right: 5%;
+            background-image: radial-gradient(circle at center, var(--imperial-gold-dark) 0%, rgba(0,0,0,0.8) 15%, transparent 20%);
+            background-size: 20% 12%; 
+            opacity: 0.6; pointer-events: none;
+        }
+
+        .door-left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 4px solid #000; }
+        .door-right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 4px solid #000; }
+        
+        /* 鋪首銜環 */
         .door-ring {
-            width: 60px; height: 60px;
-            border: 3px solid var(--gold); border-radius: 50%;
-            margin: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.9), inset 0 0 15px var(--gold-glow);
-            position: relative;
+            width: 70px; height: 70px; border: 6px solid var(--imperial-gold); border-radius: 50%; margin: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,1), inset 0 0 20px var(--gold-glow); position: relative; z-index: 2;
+            background: radial-gradient(circle at center, rgba(0,0,0,0.5) 0%, transparent 70%);
         }
-        @media (min-width: 768px) {
-            .door-ring { width: 80px; height: 80px; margin: 40px; border-width: 4px; }
-        }
+        @media (min-width: 768px) { .door-ring { width: 100px; height: 100px; margin: 50px; border-width: 8px; } }
         .door-ring::after {
-            content: ''; position: absolute;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 16px; height: 16px; background: var(--gold);
-            border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 24px; height: 24px; background: radial-gradient(circle at top left, var(--imperial-gold-light), var(--imperial-gold-dark));
+            border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,0.9);
         }
 
         .gate-action-area {
-            position: absolute; z-index: 110;
-            top: 65%;
-            display: flex; flex-direction: column; align-items: center; gap: 1rem;
-            cursor: pointer; transition: transform 0.4s ease;
-            padding: 2rem;
+            position: absolute; z-index: 110; top: 65%; display: flex; flex-direction: column; align-items: center; gap: 1rem;
+            cursor: pointer; transition: transform 0.4s ease; padding: 2rem;
         }
-        
         .gate-icon {
-            width: 32px; height: 32px;
-            fill: none; stroke: var(--gold-light); stroke-width: 1;
-            filter: drop-shadow(0 0 10px var(--gold-glow));
-            animation: floatIcon 4s ease-in-out infinite;
+            width: 35px; height: 35px; fill: none; stroke: var(--imperial-gold-light); stroke-width: 1.5;
+            filter: drop-shadow(0 0 15px var(--gold-glow)); animation: floatIcon 4s ease-in-out infinite;
         }
-
         .gate-text {
-            color: var(--gold-light); font-size: 1.2rem; font-weight: 300;
-            letter-spacing: 0.8rem; margin-right: -0.8rem;
-            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); 
+            color: var(--imperial-gold-light); font-size: 1.3rem; font-weight: 300; letter-spacing: 1rem; margin-right: -1rem;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 5px 10px #000; 
         }
         @media (min-width: 768px) {
-            .gate-action-area { top: 65%; gap: 1.5rem; }
-            .gate-icon { width: 40px; height: 40px; }
-            .gate-text { font-size: 1.5rem; letter-spacing: 1.2rem; margin-right: -1.2rem; }
+            .gate-action-area { gap: 1.5rem; }
+            .gate-icon { width: 45px; height: 45px; }
+            .gate-text { font-size: 1.8rem; letter-spacing: 1.5rem; margin-right: -1.5rem; }
         }
 
-        @keyframes floatIcon {
-            0%, 100% { transform: translateY(0); opacity: 0.8; }
-            50% { transform: translateY(-8px); opacity: 1; }
-        }
+        @keyframes floatIcon { 0%, 100% { transform: translateY(0); opacity: 0.8; } 50% { transform: translateY(-10px); opacity: 1; } }
         
-        @media (hover: hover) {
-            .gate-action-area:hover { transform: scale(1.05); }
-            .gate-action-area:hover .gate-icon { filter: drop-shadow(0 0 20px var(--gold)); stroke-width: 1.5; }
-            .gate-action-area:hover .gate-text { text-shadow: 0 0 25px var(--gold); color: #fff;}
-        }
-
-        #gate-container.opened .door-left { transform: rotateY(-105deg) translateZ(0); }
-        #gate-container.opened .door-right { transform: rotateY(105deg) translateZ(0); }
-        #gate-container.opened .gate-action-area { opacity: 0; pointer-events: none; transform: scale(1.2); }
-        #gate-container.opened { transform: scale(1.2); } 
+        #gate-container.opened .door-left { transform: rotateY(-110deg) translateZ(0); }
+        #gate-container.opened .door-right { transform: rotateY(110deg) translateZ(0); }
+        #gate-container.opened .gate-action-area { opacity: 0; pointer-events: none; transform: scale(1.3); }
+        #gate-container.opened { transform: scale(1.3); } 
         #gate-container.fade-out { opacity: 0; pointer-events: none; }
 
-        /* ================= 電影引言 ================= */
-        #cinematic-sequence {
-            position: absolute; inset: 0; z-index: 10;
-            display: flex; justify-content: center; align-items: center;
-            pointer-events: none; transform-style: preserve-3d;
-        }
-
         .quote {
-            position: absolute; text-align: center; width: 85%; max-width: 800px;
-            opacity: 0; transform: scale(0.9) translate3d(0, 20px, 0);
-            will-change: transform, opacity;
-            display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+            position: absolute; text-align: center; width: 90%; max-width: 800px;
+            opacity: 0; transform: scale(0.95) translate3d(0, 10px, 0); will-change: transform, opacity;
+            display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 0 15px;
         }
-
         .quote-main {
-            font-size: 1.6rem; font-weight: 300; color: #fff;
-            letter-spacing: 0.6rem; margin-right: -0.6rem; line-height: 2;
-            text-shadow: 0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(212,175,55,0.15);
+            /* 手機版較小的字體與字距，防止斷行跑位 */
+            font-size: 1.4rem; font-weight: 300; letter-spacing: 0.4rem; margin-right: -0.4rem; line-height: 1.8;
+            background: linear-gradient(to bottom, #fff 0%, var(--imperial-gold-light) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(212,175,55,0.3), 0 0 10px rgba(0,0,0,0.8);
         }
-        
-        .quote-sub {
-            font-size: 0.9rem; color: var(--gold); font-weight: 300;
-            letter-spacing: 0.4rem; margin-right: -0.4rem; opacity: 0.8;
+        .quote-sub { 
+            font-size: 0.9rem; color: var(--imperial-gold); font-weight: 300; 
+            letter-spacing: 0.2rem; margin-right: -0.2rem; opacity: 0.9; text-shadow: 0 2px 10px #000;
         }
-
         @media (min-width: 768px) {
+            .quote { gap: 1.5rem; }
             .quote-main { font-size: 2.8rem; letter-spacing: 1rem; margin-right: -1rem; line-height: 2.2; }
-            .quote-sub { font-size: 1.1rem; letter-spacing: 0.6rem; margin-right: -0.6rem; }
+            .quote-sub { font-size: 1.2rem; letter-spacing: 0.6rem; margin-right: -0.6rem; }
         }
 
-        .fly-through {
-            animation: textCinematicFade 9s forwards cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        
-        /* 特別針對第一幕的柔和淡入 */
-        .fly-through-soft {
-             animation: textCinematicFadeSoft 9s forwards cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
+        .fly-through { animation: textCinematicFade 9s forwards cubic-bezier(0.2, 0.8, 0.4, 1); }
         @keyframes textCinematicFade {
-            0%   { opacity: 0; transform: scale(0.9) translateY(20px) translateZ(0); }
+            0%   { opacity: 0; transform: scale(0.95) translateY(15px) translateZ(0); }
             20%  { opacity: 1; transform: scale(1) translateY(0) translateZ(0); }
-            80%  { opacity: 1; transform: scale(1.05) translateY(0) translateZ(0); }
-            100% { opacity: 0; transform: scale(1.1) translateY(-20px) translateZ(0); }
-        }
-        
-        @keyframes textCinematicFadeSoft {
-            0%   { opacity: 0; transform: scale(0.95) translateY(10px) translateZ(0); }
-            30%  { opacity: 1; transform: scale(1) translateY(0) translateZ(0); }
-            80%  { opacity: 1; transform: scale(1.02) translateY(0) translateZ(0); }
-            100% { opacity: 0; transform: scale(1.05) translateY(-10px) translateZ(0); }
+            80%  { opacity: 1; transform: scale(1.03) translateY(0) translateZ(0); }
+            100% { opacity: 0; transform: scale(1.08) translateY(-15px) translateZ(0); }
         }
 
-        /* ================= 最終揭曉與按鈕 ================= */
         #final-reveal {
-            position: absolute; inset: 0; z-index: 20;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 4s ease;
-            background: radial-gradient(circle at center, rgba(10,8,5,0.7) 0%, rgba(3,2,2,0.9) 100%);
+            position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 4s ease; 
+            padding: 10vh 20px 40px 20px; /* 上下預留空間 */
+            background: radial-gradient(circle at center, rgba(10,2,2,0.7) 0%, rgba(5,1,1,0.95) 100%);
+            overflow-y: auto; /* 手機螢幕太小時允許滾動 */
         }
         #final-reveal.active { opacity: 1; pointer-events: auto; }
 
         .grand-title {
-            font-size: 2.2rem; font-weight: 400;
-            letter-spacing: 1rem; margin-right: -1rem; margin-bottom: 2rem;
-            color: var(--gold-light);
-            text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
-            opacity: 0; transform: translateY(20px); transition: all 3s ease 1.5s;
+            /* 手機版防跑位大標題 */
+            font-size: 1.5rem; font-weight: 400; text-align: center; line-height: 1.6;
+            letter-spacing: 0.5rem; margin-right: -0.5rem; margin-bottom: 2rem;
+            background: linear-gradient(to bottom, #fff 0%, var(--imperial-gold) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(212, 175, 55, 0.5), 0 5px 20px rgba(0,0,0,1);
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 1s;
         }
-        @media (min-width: 768px) {
-            .grand-title { font-size: 3.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; margin-bottom: 3rem; }
+        @media (min-width: 768px) { 
+            .grand-title { font-size: 3.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; margin-bottom: 4rem; } 
         }
         #final-reveal.active .grand-title { opacity: 1; transform: translateY(0); }
 
-        /* 策展團隊卡片 (直接顯示於畫面上) */
-        .curator-card {
-            background: rgba(10, 8, 8, 0.6);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 2rem 1rem; width: 95%; max-width: 900px;
-            border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-            opacity: 0; transform: translateY(20px); transition: all 3s ease 2.5s;
-            margin-bottom: 3rem;
-            backdrop-filter: blur(5px);
+        .curator-section {
+            width: 100%; max-width: 900px; display: flex; flex-direction: column; align-items: center;
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 2s; margin-bottom: 3.5rem;
         }
-        @media (min-width: 768px) {
-            .curator-card { padding: 3rem 2rem; width: 90%; margin-bottom: 4rem; }
+        #final-reveal.active .curator-section { opacity: 1; transform: translateY(0); }
+
+        .curator-header { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2rem; width: 100%; }
+        .curator-header .line { height: 1px; flex: 1; max-width: 60px; background: linear-gradient(to right, transparent, var(--imperial-gold)); }
+        .curator-header .line:last-child { background: linear-gradient(to left, transparent, var(--imperial-gold)); }
+        .curator-header h2 { font-size: 1.1rem; color: var(--imperial-gold-light); font-weight: 300; letter-spacing: 0.4rem; margin-right: -0.4rem; }
+
+        .curator-profiles { display: flex; flex-direction: column; gap: 2.5rem; width: 100%; }
+        @media (min-width: 768px) { .curator-profiles { flex-direction: row; gap: 4rem; margin-bottom: 1rem; } }
+
+        .profile { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .avatar-ring {
+            width: 100px; height: 100px; border: 2px solid rgba(212,175,55,0.3); border-radius: 50%; padding: 4px; margin-bottom: 1rem;
+            transition: all 0.5s ease; background: rgba(0,0,0,0.5); position: relative;
         }
-        #final-reveal.active .curator-card { opacity: 1; transform: translateY(0); }
+        .avatar-ring::before {
+            content: ''; position: absolute; inset: -6px; border: 1px dashed rgba(212,175,55,0.4); border-radius: 50%;
+            animation: spinBorder 20s linear infinite; pointer-events: none;
+        }
+        @media (min-width: 768px) { .avatar-ring { width: 140px; height: 140px; padding: 6px; margin-bottom: 1.5rem;} }
+        .profile:hover .avatar-ring { border-color: var(--imperial-gold); box-shadow: 0 0 30px rgba(212,175,55,0.3); transform: scale(1.05); }
+        
+        .avatar-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; filter: sepia(0.6) hue-rotate(15deg) contrast(1.1); transition: filter 0.5s; }
+        .profile:hover .avatar-ring img { filter: sepia(0) hue-rotate(0deg) contrast(1); }
+
+        .profile h3 { font-size: 1.1rem; font-weight: 400; color: var(--imperial-gold-light); letter-spacing: 0.3rem; margin-right: -0.3rem; margin-bottom: 0.8rem; text-shadow: 0 2px 10px #000;}
+        .profile p { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 300; line-height: 1.8; max-width: 300px; text-shadow: 0 2px 5px #000; padding: 0 10px;}
+        @media (min-width: 768px) { .profile h3 { font-size: 1.3rem; letter-spacing: 0.4rem; margin-right: -0.4rem; margin-bottom: 1rem; } .profile p { font-size: 0.95rem; } }
 
         .enter-portal-btn {
-            position: relative; overflow: hidden;
-            padding: 1rem 3rem; border: 1px solid var(--gold);
-            background: rgba(212, 175, 55, 0.1); color: #fff;
-            font-size: 1rem; font-weight: 300; letter-spacing: 0.6rem; margin-right: -0.6rem;
-            border-radius: 100px; text-decoration: none; backdrop-filter: blur(5px);
-            transition: all 0.6s ease;
-            opacity: 0; transform: translateY(20px); transition: all 3s ease 3.5s; /* 最後出現 */
+            position: relative; overflow: hidden; padding: 1rem 3rem; border: 1px solid var(--imperial-gold);
+            background: rgba(42, 5, 5, 0.4); color: var(--imperial-gold-light); font-size: 1rem; font-weight: 300; letter-spacing: 0.4rem; margin-right: -0.4rem;
+            border-radius: 100px; text-decoration: none; backdrop-filter: blur(10px); transition: all 0.6s ease;
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 3s; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            margin-bottom: 2rem; /* 預留底部空間 */
         }
-        @media (min-width: 768px) {
-            .enter-portal-btn { padding: 1.2rem 4rem; font-size: 1.2rem; letter-spacing: 0.8rem; margin-right: -0.8rem; }
-        }
+        @media (min-width: 768px) { .enter-portal-btn { padding: 1.2rem 4rem; font-size: 1.3rem; letter-spacing: 0.8rem; margin-right: -0.8rem; } }
         .enter-portal-btn::before {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 50%);
-            animation: rotateGlow 8s linear infinite; pointer-events: none;
+            background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 50%); animation: spinBorder 8s linear infinite; pointer-events: none;
         }
-        @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
+        @keyframes spinBorder { 100% { transform: rotate(360deg); } }
 
         #final-reveal.active .enter-portal-btn { opacity: 1; transform: translateY(0); }
-        @media (hover: hover) {
-            .enter-portal-btn:hover { background: rgba(212, 175, 55, 0.2); box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); color: var(--gold-light); transform: scale(1.05); }
-        }
+        .enter-portal-btn:hover { background: rgba(212, 175, 55, 0.2); box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); color: #fff; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-    <!-- 專屬古風音樂 (只播一次) -->
+    <!-- 
+      【背景音樂預留區】
+      請將您的音樂檔案命名為 bgm.mp3 並放在同一個資料夾。
+      音樂會在播放到第 55 秒時自動淡出停止。 
+    -->
     <audio id="bg-music" preload="auto">
         <source src="bgm.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- 沉浸式十二花神動態背景 -->
-    <div id="immersive-bg">
-        <div class="bg-image"></div>
-        <div id="spirits-container"></div>
-        <div id="petals-container"></div>
-        <div class="vignette"></div>
+    <!-- 3D 空間容器 -->
+    <div id="canvas-container"></div>
+    
+    <!-- 四角畫框裝飾 -->
+    <div class="palace-frame" id="p-frame">
+        <div class="corner-tl"></div><div class="corner-tr"></div>
+        <div class="corner-bl"></div><div class="corner-br"></div>
+    </div>
+
+    <!-- UI 文字層 -->
+    <div id="ui-layer">
+        <!-- 電影引言 -->
+        <div class="quote" id="q0"><span class="quote-main">太虛幻境，大夢初醒。</span></div>
+        <div class="quote" id="q1">
+            <span class="quote-main">百花有靈，神韻天成。</span>
+            <span class="quote-sub">十二花神，以花為名，以詩傳情</span>
+        </div>
+        <div class="quote" id="q2"><span class="quote-main">對自然之美與生命之頌。</span></div>
+        <div class="quote" id="q3">
+            <span class="quote-main">願您在花神的陪伴下，<br>遇見詩憶，遇見美好。</span>
+        </div>
+
+        <!-- 最終揭曉與策展人介紹 -->
+        <div id="final-reveal" class="interactive">
+            <h1 class="grand-title">花間鏡像：十二紀元的霓裳夢迴</h1>
+            <div class="curator-section">
+                <div class="curator-header"><div class="line"></div><h2>策展人</h2><div class="line"></div></div>
+                <div class="curator-profiles">
+                    <div class="profile">
+                        <div class="avatar-ring">
+                            <!-- 請將照片命名為 tu.jpg 放入資料夾 -->
+                            <img src="tu.jpg" alt="涂聿萱" onerror="this.src='https://placehold.co/400x400/2a0505/d4af37?text=涂'">
+                        </div>
+                        <h3>涂聿萱</h3>
+                        <p>互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。</p>
+                    </div>
+                    <div class="profile">
+                        <div class="avatar-ring">
+                            <!-- 請將照片命名為 liao.jpg 放入資料夾 -->
+                            <img src="liao.jpg" alt="廖冠皓" onerror="this.src='https://placehold.co/400x400/2a0505/d4af37?text=廖'">
+                        </div>
+                        <h3>廖冠皓</h3>
+                        <p>核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。</p>
+                    </div>
+                </div>
+            </div>
+            <!-- ThingLink 傳送門 -->
+            <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="enter-portal-btn interactive">進入全景世界</a>
+        </div>
     </div>
 
     <!-- 開場大門 -->
@@ -320,127 +290,222 @@
         <div class="door door-left"><div class="door-ring"></div></div>
         <div class="door door-right"><div class="door-ring"></div></div>
         
-        <div class="gate-action-area" onclick="startCinematic()" ontouchstart="startCinematic()">
+        <div class="gate-action-area interactive" onclick="startCinematic()" ontouchstart="startCinematic()">
             <svg class="gate-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C12 2 5 6 5 13C5 17 8 20 12 22C16 20 19 17 19 13C19 6 12 2 12 2Z" />
                 <path d="M12 22C12 22 17 18 17 13C17 9 14 6 12 4C10 6 7 9 7 13C7 18 12 22 12 22Z" />
                 <circle cx="12" cy="15" r="2" fill="currentColor" stroke="none"/>
             </svg>
-            <div class="gate-text">推開花世界</div>
+            <div class="gate-text">推開大觀園</div>
         </div>
-    </div>
-
-    <!-- 融合三折頁的電影引言 -->
-    <div id="cinematic-sequence">
-        <div class="quote" id="q0">
-            <span class="quote-main">太虛幻境，大夢初醒。</span>
-        </div>
-        <div class="quote" id="q1">
-            <span class="quote-main">百花有靈，神韻天成。</span>
-            <span class="quote-sub">十二花神，以花為名，以詩傳情</span>
-        </div>
-        <div class="quote" id="q2">
-            <span class="quote-main">對自然之美與生命之頌。</span>
-        </div>
-        <div class="quote" id="q3">
-            <span class="quote-main">願您在花神的陪伴下，<br>遇見詩憶，遇見美好。</span>
-        </div>
-    </div>
-
-    <!-- 最終揭曉 (包含策展人資訊) -->
-    <div id="final-reveal">
-        <h1 class="grand-title">花間鏡像：十二紀元的霓裳夢迴</h1>
-        
-        <!-- 策展人直接顯示區塊 -->
-        <div class="curator-card">
-            <div class="flex items-center justify-center gap-4 mb-8 md:mb-12">
-                <div class="h-[1px] w-12 md:w-20 bg-gradient-to-r from-transparent to-[var(--gold)]"></div>
-                <h2 class="text-lg md:text-2xl tracking-[0.5rem] md:tracking-[0.8rem] -mr-[0.5rem] md:-mr-[0.8rem] text-center text-[var(--gold)] font-light">策展人</h2>
-                <div class="h-[1px] w-12 md:w-20 bg-gradient-to-l from-transparent to-[var(--gold)]"></div>
-            </div>
-            
-            <div class="flex flex-col md:flex-row gap-8 md:gap-16">
-                <!-- 涂聿萱 -->
-                <div class="flex-1 flex flex-col items-center group text-center">
-                    <div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border border-[rgba(212,175,55,0.4)] p-1 mb-4 transition-all duration-500 group-hover:border-[var(--gold)]">
-                        <!-- 替換此處 src 為您的照片 -->
-                        <img src="tu.jpg" alt="涂聿萱" class="w-full h-full object-cover rounded-full filter grayscale-[60%] group-hover:grayscale-0 transition-all duration-500">
-                    </div>
-                    <h3 class="text-lg md:text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-2 md:mb-4">涂聿萱</h3>
-                    <p class="text-xs md:text-sm text-gray-400 font-light leading-relaxed md:leading-loose px-2">
-                        互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。
-                    </p>
-                </div>
-                
-                <!-- 廖冠皓 -->
-                <div class="flex-1 flex flex-col items-center group text-center">
-                    <div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border border-[rgba(212,175,55,0.4)] p-1 mb-4 transition-all duration-500 group-hover:border-[var(--gold)]">
-                        <!-- 替換此處 src 為您的照片 -->
-                        <img src="liao.jpg" alt="廖冠皓" class="w-full h-full object-cover rounded-full filter grayscale-[60%] group-hover:grayscale-0 transition-all duration-500">
-                    </div>
-                    <h3 class="text-lg md:text-xl font-normal tracking-[0.4rem] -mr-[0.4rem] text-white mb-2 md:mb-4">廖冠皓</h3>
-                    <p class="text-xs md:text-sm text-gray-400 font-light leading-relaxed md:leading-loose px-2">
-                        核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="enter-portal-btn">
-            進入全景世界
-        </a>
     </div>
 
     <script>
-        let hasStarted = false;
-
-        // 生成十二道花神靈光與落花
-        function createDynamicBackground() {
-            const spiritsContainer = document.getElementById('spirits-container');
-            const petalsContainer = document.getElementById('petals-container');
+        let scene, camera, renderer, controls;
+        let petals = []; 
+        let dustParticles;
+        let isAutoRotating = true;
+        
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
             
-            // 12 花神代表色
-            const spiritColors = [
-                '#ff4d4d', '#ffb3b3', '#ff99cc', '#ff3366', 
-                '#ff3300', '#ffccff', '#cc0052', '#ffcc00', 
-                '#ffdd33', '#ff6699', '#cc0000', '#ffffcc'
-            ];
+            scene = new THREE.Scene();
+            // 預設深色氛圍底色
+            scene.background = new THREE.Color(0x110202); 
+            scene.fog = new THREE.FogExp2(0x110202, 0.0012); 
 
-            // 生成靈光
-            spiritColors.forEach((color, index) => {
-                const orb = document.createElement('div');
-                orb.className = 'spirit-orb';
-                const size = Math.random() * 30 + 30; // 30vw - 60vw
-                orb.style.width = `${size}vw`;
-                orb.style.height = `${size}vw`;
-                orb.style.background = `radial-gradient(circle, ${color} 0%, transparent 60%)`;
-                orb.style.left = `${Math.random() * 100 - 20}vw`;
-                orb.style.top = `${Math.random() * 100 - 20}vh`;
-                
-                // 每顆光暈隨機漂浮動畫
-                orb.style.animation = `floatOrb ${Math.random() * 20 + 20}s infinite alternate ease-in-out`;
-                orb.style.animationDelay = `-${Math.random() * 20}s`;
-                
-                spiritsContainer.appendChild(orb);
+            /* 
+             * 【您的專屬背景圖載入區塊】
+             * 請將您的 360 度全景圖或一般高畫質圖片命名為 palace_bg.jpg，
+             * 並與此 html 檔案放在同一個資料夾。
+             * 程式會自動將它貼成背景，若找不到圖片，則會平滑回落到上面的預設暗紅色背景。
+             */
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load('palace_bg.jpg', 
+                function(texture) {
+                    // 若是 360 度全景圖片 (Equirectangular)，使用這行讓它環繞四周
+                    texture.mapping = THREE.EquirectangularReflectionMapping;
+                    texture.encoding = THREE.sRGBEncoding; // 確保您上傳的宮廷背景色彩飽和不失真
+                    scene.background = texture;
+                },
+                undefined,
+                function(err) {
+                    console.log('未偵測到 palace_bg.jpg，將使用預設的純色深紅背景。');
+                }
+            );
+
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 3000);
+            camera.position.set(0, 0, 0.1); 
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = false; 
+            controls.enablePan = false;
+            controls.enableDamping = true; 
+            controls.dampingFactor = 0.04;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.4; // 非常緩慢的環顧
+            controls.addEventListener('start', () => { isAutoRotating = false; }); 
+
+            const ambientLight = new THREE.AmbientLight(0xffcccc, 0.2); 
+            scene.add(ambientLight);
+            
+            // 主光源：穹頂灑下的金光
+            const topLight = new THREE.DirectionalLight(0xd4af37, 1.5);
+            topLight.position.set(0, 200, 0);
+            scene.add(topLight);
+            
+            // 側光源：燈籠的暗紅光
+            const sideLight = new THREE.DirectionalLight(0x8a1313, 2);
+            sideLight.position.set(-100, 0, -100);
+            scene.add(sideLight);
+
+            // 生成花瓣與金箔 (保留這兩個最受歡迎的特效)
+            create3DPetals();
+            createGoldDust();
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        function create3DPetals() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.beginPath();
+            ctx.moveTo(64, 10);
+            ctx.bezierCurveTo(100, 10, 118, 50, 64, 118);
+            ctx.bezierCurveTo(10, 50, 28, 10, 64, 10);
+            
+            const grad = ctx.createLinearGradient(64, 10, 64, 118);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.5, '#f48fb1'); 
+            grad.addColorStop(1, '#8a1313');
+            
+            ctx.fillStyle = grad; ctx.fill();
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.encoding = THREE.sRGBEncoding;
+
+            const material = new THREE.MeshPhysicalMaterial({
+                map: texture, side: THREE.DoubleSide, transparent: true, opacity: 0.9,
+                roughness: 0.4, metalness: 0.2, clearcoat: 0.3, alphaTest: 0.1
             });
 
-            // 生成落花
-            for (let i = 0; i < 30; i++) {
-                const petal = document.createElement('div');
-                petal.className = 'petal';
-                petal.style.left = `${Math.random() * 100}vw`;
-                petal.style.animation = `fallPetal ${Math.random() * 6 + 6}s infinite linear`;
-                petal.style.animationDelay = `${Math.random() * 10}s`;
-                petalsContainer.appendChild(petal);
+            const geometry = new THREE.PlaneGeometry(5, 5, 2, 2);
+            const positions = geometry.attributes.position;
+            for(let i=0; i<positions.count; i++) {
+                const x = positions.getX(i); const y = positions.getY(i);
+                positions.setZ(i, (x*x + y*y) * -0.06); 
+            }
+            geometry.computeVertexNormals();
+
+            // 手機版自動減少花瓣數量以確保順暢
+            const petalCount = window.innerWidth < 768 ? 400 : 900; 
+
+            for (let i = 0; i < petalCount; i++) {
+                const petal = new THREE.Mesh(geometry, material);
+                // 分佈在宮殿空間中
+                const r = 50 + Math.random() * 400; 
+                const theta = 2 * Math.PI * Math.random();
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                petal.position.x = r * Math.sin(phi) * Math.cos(theta);
+                petal.position.y = r * Math.sin(phi) * Math.sin(theta);
+                petal.position.z = r * Math.cos(phi);
+                petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                
+                const scale = 0.5 + Math.random() * 1.5;
+                petal.scale.set(scale, scale, scale);
+
+                petal.userData = {
+                    rotX: (Math.random() - 0.5) * 0.03, rotY: (Math.random() - 0.5) * 0.03, rotZ: (Math.random() - 0.5) * 0.03,
+                    fall: 0.2 + Math.random() * 0.4, drift: (Math.random() - 0.5) * 0.15, orbit: (Math.random() - 0.5) * 0.002
+                };
+                petals.push(petal); scene.add(petal);
             }
         }
+
+        function createGoldDust() {
+            const dustCount = window.innerWidth < 768 ? 600 : 1500;
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            
+            for (let i = 0; i < dustCount; i++) {
+                positions.push(
+                    (Math.random() - 0.5) * 800,
+                    (Math.random() - 0.5) * 800,
+                    (Math.random() - 0.5) * 800
+                );
+            }
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: 0xd4af37, // 鎏金色
+                size: 2.0,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+            
+            dustParticles = new THREE.Points(geometry, material);
+            scene.add(dustParticles);
+        }
+
+        function onWindowResize() {
+            if(camera) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            petals.forEach(petal => {
+                const d = petal.userData;
+                petal.rotation.x += d.rotX; petal.rotation.y += d.rotY; petal.rotation.z += d.rotZ;
+                petal.position.y -= d.fall; petal.position.x += d.drift;
+                
+                const x = petal.position.x; const z = petal.position.z;
+                petal.position.x = x * Math.cos(d.orbit) - z * Math.sin(d.orbit);
+                petal.position.z = x * Math.sin(d.orbit) + z * Math.cos(d.orbit);
+
+                if (petal.position.y < -250) {
+                    petal.position.y = 250; 
+                    petal.position.x = (Math.random() - 0.5) * 400; 
+                    petal.position.z = (Math.random() - 0.5) * 400;
+                }
+            });
+
+            if(dustParticles) {
+                dustParticles.rotation.y += 0.0003;
+                dustParticles.rotation.x += 0.0001;
+            }
+
+            if(isAutoRotating && controls) controls.update(); 
+            if(renderer && scene && camera) renderer.render(scene, camera);
+        }
+
+        let hasStarted = false;
+
+        window.onload = () => {
+            initThreeJS(); 
+        };
 
         function startCinematic(e) {
             if(e) e.preventDefault();
             if(hasStarted) return;
             hasStarted = true;
 
-            // 音樂淡入 (單次播放，不循環)
             const bgMusic = document.getElementById('bg-music');
             bgMusic.volume = 0;
             const playPromise = bgMusic.play();
@@ -448,43 +513,41 @@
                 playPromise.then(_ => {
                     let vol = 0;
                     let fadeAudio = setInterval(() => {
-                        if (vol < 0.6) {
-                            vol = Math.min(0.6, vol + 0.05);
-                            bgMusic.volume = vol;
-                        } else {
-                            clearInterval(fadeAudio);
-                        }
+                        if (vol < 0.6) { vol = Math.min(0.6, vol + 0.05); bgMusic.volume = vol; } 
+                        else { clearInterval(fadeAudio); }
                     }, 200);
-                }).catch(error => { console.log("Audio play prevented:", error); });
+                }).catch(e => console.log("瀏覽器阻擋自動播放音樂", e));
             }
 
-            // 初始化背景
-            createDynamicBackground();
-            document.getElementById('immersive-bg').style.opacity = '1';
-
-            // 開門動畫
             const gate = document.getElementById('gate-container');
             gate.classList.add('opened');
+            document.getElementById('canvas-container').style.opacity = '1';
+            document.getElementById('p-frame').style.opacity = '1';
+            
             setTimeout(() => gate.classList.add('fade-out'), 2000);
             setTimeout(() => { gate.style.display = 'none'; }, 4000);
 
-            // 電影引言序列
-            const q0 = document.getElementById('q0');
-            const q1 = document.getElementById('q1');
-            const q2 = document.getElementById('q2');
-            const q3 = document.getElementById('q3');
+            const q0 = document.getElementById('q0'); const q1 = document.getElementById('q1');
+            const q2 = document.getElementById('q2'); const q3 = document.getElementById('q3');
             const finalReveal = document.getElementById('final-reveal');
 
-            // 時間軸排程 (第一幕使用柔和淡入，且立刻出現)
-            setTimeout(() => { q0.classList.add('fly-through-soft'); }, 500); 
+            // 時間軸排程
+            setTimeout(() => { q0.classList.add('fly-through'); }, 500);
             setTimeout(() => { q1.classList.add('fly-through'); }, 11500);
             setTimeout(() => { q2.classList.add('fly-through'); }, 21000);
             setTimeout(() => { q3.classList.add('fly-through'); }, 30500);
             
-            // 最終揭曉 (所有字句消失後，標題、策展人、按鈕依序浮現)
+            // 第 40 秒最終揭曉
+            setTimeout(() => { finalReveal.classList.add('active'); }, 40000); 
+
+            // ===== 第 55 秒背景音樂優雅淡出並停止 =====
             setTimeout(() => {
-                finalReveal.classList.add('active');
-            }, 40000); 
+                let currentVol = bgMusic.volume;
+                let fadeOutAudio = setInterval(() => {
+                    if (currentVol > 0.05) { currentVol -= 0.05; bgMusic.volume = currentVol; } 
+                    else { bgMusic.volume = 0; bgMusic.pause(); clearInterval(fadeOutAudio); }
+                }, 200); 
+            }, 55000); 
         }
     </script>
 </body>
