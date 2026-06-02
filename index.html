@@ -3,371 +3,445 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>大觀園十二花神 - 宮廷前導劇場</title>
+    <title>大觀園十二花神 - 360穿梭前導劇場</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js 核心與控制器 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <!-- 思源宋體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --imperial-gold: #d4af37;
-            --imperial-gold-light: #f3e5ab;
-            --imperial-gold-dark: #aa8421;
-            --imperial-red: #7a1111;
-            --imperial-red-dark: #3a0202;
-            --ink-black: #050202;
-            --gold-glow: rgba(212, 175, 55, 0.5);
+            --gold: #d4af37;
+            --gold-light: #f3e5ab;
+            --gold-glow: rgba(212, 175, 55, 0.6);
+            --bg-dark: #030202; 
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: var(--ink-black);
-            font-family: 'Noto Serif TC', serif !important; color: #fff;
-            user-select: none; -webkit-user-select: none;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            font-family: 'Noto Serif TC', serif !important;
+            color: #fff;
+            user-select: none;
+            -webkit-user-select: none;
+            perspective: 1200px;
         }
 
+        ::-webkit-scrollbar { display: none; }
+
+        /* ================= 3D 畫布與遮罩 ================= */
         #canvas-container {
             position: absolute; inset: 0; z-index: 1;
             opacity: 0; transition: opacity 3s ease 1s;
+            cursor: grab;
+        }
+        #canvas-container:active { cursor: grabbing; }
+
+        .vignette {
+            position: absolute; inset: 0; z-index: 4; pointer-events: none;
+            background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);
         }
 
-        #ui-layer {
-            position: absolute; inset: 0; z-index: 10;
-            pointer-events: none; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        
-        .interactive { pointer-events: auto; }
-
-        .palace-frame {
-            position: absolute; inset: 15px; z-index: 5; pointer-events: none;
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            opacity: 0; transition: opacity 4s ease 2s;
-        }
-        @media (min-width: 768px) { .palace-frame { inset: 30px; } }
-        
-        .corner-tl { position: absolute; top: -2px; left: -2px; width: 30px; height: 30px; border-top: 2px solid var(--imperial-gold); border-left: 2px solid var(--imperial-gold); }
-        .corner-tr { position: absolute; top: -2px; right: -2px; width: 30px; height: 30px; border-top: 2px solid var(--imperial-gold); border-right: 2px solid var(--imperial-gold); }
-        .corner-bl { position: absolute; bottom: -2px; left: -2px; width: 30px; height: 30px; border-bottom: 2px solid var(--imperial-gold); border-left: 2px solid var(--imperial-gold); }
-        .corner-br { position: absolute; bottom: -2px; right: -2px; width: 30px; height: 30px; border-bottom: 2px solid var(--imperial-gold); border-right: 2px solid var(--imperial-gold); }
-
+        /* ================= 開場大門 ================= */
         #gate-container {
-            position: absolute; inset: 0; z-index: 100; perspective: 2000px;
-            display: flex; justify-content: center; align-items: center; background: #000;
-            transition: transform 4.5s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 2s ease 2.5s;
-            pointer-events: auto;
+            position: absolute; inset: 0; z-index: 100;
+            perspective: 2000px;
+            display: flex; justify-content: center; align-items: center;
+            background: #000; overflow: hidden;
+            transition: transform 4s cubic-bezier(0.25, 1, 0.2, 1), opacity 2s ease 2s;
         }
         
         .door {
             position: absolute; top: 0; width: 50vw; height: 100vh;
-            background-image: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.2)), linear-gradient(to bottom, var(--imperial-red), var(--imperial-red-dark));
-            border: 2px solid #2a0202; display: flex; align-items: center; box-shadow: inset 0 0 100px rgba(0,0,0,0.95);
-            transition: transform 4s cubic-bezier(0.4, 0, 0.1, 1); will-change: transform;
-            overflow: hidden;
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.1)),
+                linear-gradient(to bottom, #6a1313, #2a0505);
+            border: 2px solid #3a0808;
+            transition: transform 3.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.9);
+            will-change: transform;
         }
+        .door-left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 3px solid #000; }
+        .door-right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 3px solid #000; }
         
-        /* 宮門九路釘 (皇家象徵) */
-        .door::before {
-            content: ''; position: absolute; top: 5%; bottom: 5%; left: 5%; right: 5%;
-            background-image: radial-gradient(circle at center, var(--imperial-gold-dark) 0%, rgba(0,0,0,0.8) 15%, transparent 20%);
-            background-size: 20% 12%; 
-            opacity: 0.6; pointer-events: none;
-        }
-
-        .door-left { left: 0; transform-origin: left; justify-content: flex-end; border-right: 4px solid #000; }
-        .door-right { right: 0; transform-origin: right; justify-content: flex-start; border-left: 4px solid #000; }
-        
-        /* 鋪首銜環 */
         .door-ring {
-            width: 70px; height: 70px; border: 6px solid var(--imperial-gold); border-radius: 50%; margin: 30px;
-            box-shadow: 0 15px 30px rgba(0,0,0,1), inset 0 0 20px var(--gold-glow); position: relative; z-index: 2;
-            background: radial-gradient(circle at center, rgba(0,0,0,0.5) 0%, transparent 70%);
+            width: 60px; height: 60px;
+            border: 3px solid var(--gold); border-radius: 50%;
+            margin: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.9), inset 0 0 15px var(--gold-glow);
+            position: relative;
         }
-        @media (min-width: 768px) { .door-ring { width: 100px; height: 100px; margin: 50px; border-width: 8px; } }
+        @media (min-width: 768px) {
+            .door-ring { width: 80px; height: 80px; margin: 40px; border-width: 4px; }
+        }
         .door-ring::after {
             content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 24px; height: 24px; background: radial-gradient(circle at top left, var(--imperial-gold-light), var(--imperial-gold-dark));
-            border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,0.9);
+            width: 16px; height: 16px; background: var(--gold);
+            border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
         }
 
         .gate-action-area {
-            position: absolute; z-index: 110; top: 65%; display: flex; flex-direction: column; align-items: center; gap: 1rem;
+            position: absolute; z-index: 110; top: 65%;
+            display: flex; flex-direction: column; align-items: center; gap: 1rem;
             cursor: pointer; transition: transform 0.4s ease; padding: 2rem;
         }
+        
         .gate-icon {
-            width: 35px; height: 35px; fill: none; stroke: var(--imperial-gold-light); stroke-width: 1.5;
-            filter: drop-shadow(0 0 15px var(--gold-glow)); animation: floatIcon 4s ease-in-out infinite;
-        }
-        .gate-text {
-            color: var(--imperial-gold-light); font-size: 1.3rem; font-weight: 300; letter-spacing: 1rem; margin-right: -1rem;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 5px 10px #000; 
-        }
-        @media (min-width: 768px) {
-            .gate-action-area { gap: 1.5rem; }
-            .gate-icon { width: 45px; height: 45px; }
-            .gate-text { font-size: 1.8rem; letter-spacing: 1.5rem; margin-right: -1.5rem; }
+            width: 32px; height: 32px; fill: none; stroke: var(--gold-light); stroke-width: 1;
+            filter: drop-shadow(0 0 10px var(--gold-glow));
+            animation: floatIcon 4s ease-in-out infinite;
         }
 
-        @keyframes floatIcon { 0%, 100% { transform: translateY(0); opacity: 0.8; } 50% { transform: translateY(-10px); opacity: 1; } }
+        .gate-text {
+            color: var(--gold-light); font-size: 1.2rem; 
+            font-weight: 900; 
+            letter-spacing: 0.8rem; margin-right: -0.8rem;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4); 
+        }
+        @media (min-width: 768px) {
+            .gate-action-area { top: 65%; gap: 1.5rem; }
+            .gate-icon { width: 40px; height: 40px; }
+            .gate-text { font-size: 1.5rem; letter-spacing: 1.2rem; margin-right: -1.2rem; }
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); opacity: 0.8; }
+            50% { transform: translateY(-8px); opacity: 1; }
+        }
         
-        #gate-container.opened .door-left { transform: rotateY(-110deg) translateZ(0); }
-        #gate-container.opened .door-right { transform: rotateY(110deg) translateZ(0); }
-        #gate-container.opened .gate-action-area { opacity: 0; pointer-events: none; transform: scale(1.3); }
-        #gate-container.opened { transform: scale(1.3); } 
+        @media (hover: hover) {
+            .gate-action-area:hover { transform: scale(1.05); }
+            .gate-action-area:hover .gate-icon { filter: drop-shadow(0 0 20px var(--gold)); stroke-width: 1.5; }
+            .gate-action-area:hover .gate-text { text-shadow: 0 0 25px var(--gold); color: #fff;}
+        }
+
+        #gate-container.opened .door-left { transform: rotateY(-105deg) translateZ(0); }
+        #gate-container.opened .door-right { transform: rotateY(105deg) translateZ(0); }
+        #gate-container.opened .gate-action-area { opacity: 0; pointer-events: none; transform: scale(1.2); }
+        #gate-container.opened { transform: scale(1.2); } 
         #gate-container.fade-out { opacity: 0; pointer-events: none; }
 
+        /* ================= 電影引言 (3D 強化穿透運鏡) ================= */
+        #cinematic-sequence {
+            position: absolute; inset: 0; z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: none; 
+            transform-style: preserve-3d;
+            perspective: 800px;
+        }
+
         .quote {
-            position: absolute; text-align: center; width: 90%; max-width: 800px;
-            opacity: 0; transform: scale(0.95) translate3d(0, 10px, 0); will-change: transform, opacity;
-            display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 0 15px;
+            position: absolute; text-align: center; width: 90%; max-width: 900px;
+            opacity: 0; transform: translateZ(-1200px); /* 從更深處飛來 */
+            will-change: transform, opacity;
+            display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
         }
+
         .quote-main {
-            /* 手機版較小的字體與字距，防止斷行跑位 */
-            font-size: 1.4rem; font-weight: 300; letter-spacing: 0.4rem; margin-right: -0.4rem; line-height: 1.8;
-            background: linear-gradient(to bottom, #fff 0%, var(--imperial-gold-light) 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(212,175,55,0.3), 0 0 10px rgba(0,0,0,0.8);
+            font-size: 1.6rem; font-weight: 900; color: #fff;
+            letter-spacing: 0.6rem; margin-right: -0.6rem; line-height: 2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.8), 0 0 40px rgba(212,175,55,0.4);
         }
-        .quote-sub { 
-            font-size: 0.9rem; color: var(--imperial-gold); font-weight: 300; 
-            letter-spacing: 0.2rem; margin-right: -0.2rem; opacity: 0.9; text-shadow: 0 2px 10px #000;
+        
+        .quote-sub {
+            font-size: 0.9rem; color: var(--gold-light); font-weight: 400;
+            letter-spacing: 0.4rem; margin-right: -0.4rem; opacity: 0.9;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.9);
         }
+
         @media (min-width: 768px) {
-            .quote { gap: 1.5rem; }
-            .quote-main { font-size: 2.8rem; letter-spacing: 1rem; margin-right: -1rem; line-height: 2.2; }
+            .quote-main { font-size: 3rem; letter-spacing: 1rem; margin-right: -1rem; line-height: 2.2; }
             .quote-sub { font-size: 1.2rem; letter-spacing: 0.6rem; margin-right: -0.6rem; }
         }
 
-        .fly-through { animation: textCinematicFade 9s forwards cubic-bezier(0.2, 0.8, 0.4, 1); }
-        @keyframes textCinematicFade {
-            0%   { opacity: 0; transform: scale(0.95) translateY(15px) translateZ(0); }
-            20%  { opacity: 1; transform: scale(1) translateY(0) translateZ(0); }
-            80%  { opacity: 1; transform: scale(1.03) translateY(0) translateZ(0); }
-            100% { opacity: 0; transform: scale(1.08) translateY(-15px) translateZ(0); }
+        /* 3D 迎面爆發穿梭特效 */
+        .fly-through {
+            animation: text3DWarp 9s forwards cubic-bezier(0.25, 1, 0.4, 1);
         }
 
+        @keyframes text3DWarp {
+            0%   { opacity: 0; transform: translateZ(-1200px) translateY(20px); filter: blur(15px); }
+            20%  { opacity: 1; transform: translateZ(-300px) translateY(0); filter: blur(0px); }
+            70%  { opacity: 1; transform: translateZ(200px) translateY(0); filter: blur(0px); }
+            100% { opacity: 0; transform: translateZ(1000px) translateY(-30px); filter: blur(20px); } /* 直接穿過螢幕 */
+        }
+
+        /* ================= 最終揭曉 & 策展團隊 ================= */
         #final-reveal {
-            position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 4s ease; 
-            padding: 10vh 20px 40px 20px; /* 上下預留空間 */
-            background: radial-gradient(circle at center, rgba(10,2,2,0.7) 0%, rgba(5,1,1,0.95) 100%);
-            overflow-y: auto; /* 手機螢幕太小時允許滾動 */
+            position: absolute; inset: 0; z-index: 20;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 4s ease;
+            background: radial-gradient(circle at center, rgba(10,8,5,0.75) 0%, rgba(3,2,2,0.95) 100%);
+            padding: 2rem 1rem; overflow-y: auto; 
         }
         #final-reveal.active { opacity: 1; pointer-events: auto; }
 
         .grand-title {
-            /* 手機版防跑位大標題 */
-            font-size: 1.5rem; font-weight: 400; text-align: center; line-height: 1.6;
-            letter-spacing: 0.5rem; margin-right: -0.5rem; margin-bottom: 2rem;
-            background: linear-gradient(to bottom, #fff 0%, var(--imperial-gold) 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 40px rgba(212, 175, 55, 0.5), 0 5px 20px rgba(0,0,0,1);
+            font-size: 1.6rem; font-weight: 900; text-align: center;
+            letter-spacing: 0.5rem; margin-right: -0.5rem; margin-bottom: 2.5rem;
+            color: var(--gold-light);
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.5), 0 5px 15px rgba(0,0,0,0.8);
             opacity: 0; transform: translateY(20px); transition: all 3s ease 1s;
+            white-space: nowrap; 
         }
-        @media (min-width: 768px) { 
-            .grand-title { font-size: 3.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; margin-bottom: 4rem; } 
+        @media (min-width: 768px) {
+            .grand-title { font-size: 3.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; margin-bottom: 4rem; }
         }
         #final-reveal.active .grand-title { opacity: 1; transform: translateY(0); }
 
+        /* 高質感毛玻璃方塊包覆 */
         .curator-section {
-            width: 100%; max-width: 900px; display: flex; flex-direction: column; align-items: center;
-            opacity: 0; transform: translateY(20px); transition: all 3s ease 2s; margin-bottom: 3.5rem;
+            width: 92%; max-width: 850px;
+            display: flex; flex-direction: column; align-items: center;
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 2s;
+            margin-bottom: 2rem;
+            
+            background: rgba(10, 5, 5, 0.4); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.25); 
+            border-radius: 24px; 
+            padding: 2.5rem 1.5rem;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.9), inset 0 0 30px rgba(212, 175, 55, 0.08); 
+        }
+        @media (min-width: 768px) {
+            .curator-section { padding: 3.5rem 4rem; margin-bottom: 3rem; }
         }
         #final-reveal.active .curator-section { opacity: 1; transform: translateY(0); }
 
-        .curator-header { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2rem; width: 100%; }
-        .curator-header .line { height: 1px; flex: 1; max-width: 60px; background: linear-gradient(to right, transparent, var(--imperial-gold)); }
-        .curator-header .line:last-child { background: linear-gradient(to left, transparent, var(--imperial-gold)); }
-        .curator-header h2 { font-size: 1.1rem; color: var(--imperial-gold-light); font-weight: 300; letter-spacing: 0.4rem; margin-right: -0.4rem; }
-
-        .curator-profiles { display: flex; flex-direction: column; gap: 2.5rem; width: 100%; }
-        @media (min-width: 768px) { .curator-profiles { flex-direction: row; gap: 4rem; margin-bottom: 1rem; } }
-
-        .profile { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .avatar-ring {
-            width: 100px; height: 100px; border: 2px solid rgba(212,175,55,0.3); border-radius: 50%; padding: 4px; margin-bottom: 1rem;
-            transition: all 0.5s ease; background: rgba(0,0,0,0.5); position: relative;
+        .curator-header {
+            display: flex; align-items: center; justify-content: center; gap: 1rem;
+            margin-bottom: 2rem; width: 100%;
         }
-        .avatar-ring::before {
-            content: ''; position: absolute; inset: -6px; border: 1px dashed rgba(212,175,55,0.4); border-radius: 50%;
-            animation: spinBorder 20s linear infinite; pointer-events: none;
+        .curator-header .line {
+            height: 1px; flex: 1; max-width: 60px;
+            background: linear-gradient(to right, transparent, var(--gold));
         }
-        @media (min-width: 768px) { .avatar-ring { width: 140px; height: 140px; padding: 6px; margin-bottom: 1.5rem;} }
-        .profile:hover .avatar-ring { border-color: var(--imperial-gold); box-shadow: 0 0 30px rgba(212,175,55,0.3); transform: scale(1.05); }
+        .curator-header .line:last-child {
+            background: linear-gradient(to left, transparent, var(--gold));
+        }
+        .curator-header h2 {
+            font-size: 1.2rem; color: var(--gold); font-weight: 900;
+            letter-spacing: 0.6rem; margin-right: -0.6rem;
+        }
+
+        .curator-profiles {
+            display: flex; flex-direction: column; gap: 3rem; width: 100%;
+        }
+        @media (min-width: 768px) {
+            .curator-profiles { flex-direction: row; gap: 4rem; }
+        }
+
+        .profile {
+            flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
         
-        .avatar-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; filter: sepia(0.6) hue-rotate(15deg) contrast(1.1); transition: filter 0.5s; }
-        .profile:hover .avatar-ring img { filter: sepia(0) hue-rotate(0deg) contrast(1); }
+        .avatar-ring {
+            width: 100px; height: 100px;
+            border: 1px solid rgba(212,175,55,0.5); border-radius: 50%;
+            padding: 4px; margin-bottom: 1.5rem;
+            transition: border-color 0.4s;
+        }
+        @media (min-width: 768px) {
+            .avatar-ring { width: 140px; height: 140px; }
+        }
+        .profile:hover .avatar-ring { border-color: var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.3); }
+        
+        .avatar-ring img {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            filter: sepia(0.3) contrast(1.1); transition: filter 0.5s; 
+        }
+        .profile:hover .avatar-ring img { filter: sepia(0) contrast(1); }
 
-        .profile h3 { font-size: 1.1rem; font-weight: 400; color: var(--imperial-gold-light); letter-spacing: 0.3rem; margin-right: -0.3rem; margin-bottom: 0.8rem; text-shadow: 0 2px 10px #000;}
-        .profile p { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 300; line-height: 1.8; max-width: 300px; text-shadow: 0 2px 5px #000; padding: 0 10px;}
-        @media (min-width: 768px) { .profile h3 { font-size: 1.3rem; letter-spacing: 0.4rem; margin-right: -0.4rem; margin-bottom: 1rem; } .profile p { font-size: 0.95rem; } }
+        .profile h3 {
+            font-size: 1.3rem; font-weight: 900; color: #fff;
+            letter-spacing: 0.4rem; margin-right: -0.4rem; margin-bottom: 1rem;
+        }
+        .profile p {
+            font-size: 0.9rem; color: rgba(255,255,255,0.7); font-weight: 300;
+            line-height: 1.8; max-width: 280px;
+        }
 
         .enter-portal-btn {
-            position: relative; overflow: hidden; padding: 1rem 3rem; border: 1px solid var(--imperial-gold);
-            background: rgba(42, 5, 5, 0.4); color: var(--imperial-gold-light); font-size: 1rem; font-weight: 300; letter-spacing: 0.4rem; margin-right: -0.4rem;
-            border-radius: 100px; text-decoration: none; backdrop-filter: blur(10px); transition: all 0.6s ease;
-            opacity: 0; transform: translateY(20px); transition: all 3s ease 3s; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            margin-bottom: 2rem; /* 預留底部空間 */
+            position: relative; overflow: hidden; flex-shrink: 0;
+            padding: 1.2rem 3rem; border: 1px solid var(--gold);
+            background: rgba(212, 175, 55, 0.1); color: #fff;
+            font-size: 1.1rem; font-weight: 900; letter-spacing: 0.4rem; margin-right: -0.4rem;
+            border-radius: 100px; text-decoration: none; backdrop-filter: blur(5px);
+            transition: all 0.6s ease;
+            opacity: 0; transform: translateY(20px); transition: all 3s ease 3s;
+            margin-bottom: 2rem;
         }
-        @media (min-width: 768px) { .enter-portal-btn { padding: 1.2rem 4rem; font-size: 1.3rem; letter-spacing: 0.8rem; margin-right: -0.8rem; } }
+        @media (min-width: 768px) {
+            .enter-portal-btn { padding: 1.5rem 5rem; font-size: 1.3rem; letter-spacing: 0.8rem; margin-right: -0.8rem; }
+        }
         .enter-portal-btn::before {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 50%); animation: spinBorder 8s linear infinite; pointer-events: none;
+            background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 50%);
+            animation: rotateGlow 8s linear infinite; pointer-events: none;
         }
-        @keyframes spinBorder { 100% { transform: rotate(360deg); } }
+        @keyframes rotateGlow { 100% { transform: rotate(360deg); } }
 
         #final-reveal.active .enter-portal-btn { opacity: 1; transform: translateY(0); }
-        .enter-portal-btn:hover { background: rgba(212, 175, 55, 0.2); box-shadow: 0 0 50px rgba(212, 175, 55, 0.4); color: #fff; transform: scale(1.05); }
+        @media (hover: hover) {
+            .enter-portal-btn:hover { background: rgba(212, 175, 55, 0.25); box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); color: var(--gold-light); transform: scale(1.05); }
+        }
+
     </style>
 </head>
 <body>
 
-    <!-- 
-      【背景音樂預留區】
-      請將您的音樂檔案命名為 bgm.mp3 並放在同一個資料夾。
-      音樂會在播放到第 55 秒時自動淡出停止。 
-    -->
     <audio id="bg-music" preload="auto">
         <source src="bgm.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- 3D 空間容器 -->
     <div id="canvas-container"></div>
-    
-    <!-- 四角畫框裝飾 -->
-    <div class="palace-frame" id="p-frame">
-        <div class="corner-tl"></div><div class="corner-tr"></div>
-        <div class="corner-bl"></div><div class="corner-br"></div>
-    </div>
+    <div class="vignette"></div>
 
-    <!-- UI 文字層 -->
-    <div id="ui-layer">
-        <!-- 電影引言 -->
-        <div class="quote" id="q0"><span class="quote-main">太虛幻境，大夢初醒。</span></div>
-        <div class="quote" id="q1">
-            <span class="quote-main">百花有靈，神韻天成。</span>
-            <span class="quote-sub">十二花神，以花為名，以詩傳情</span>
-        </div>
-        <div class="quote" id="q2"><span class="quote-main">對自然之美與生命之頌。</span></div>
-        <div class="quote" id="q3">
-            <span class="quote-main">願您在花神的陪伴下，<br>遇見詩憶，遇見美好。</span>
-        </div>
-
-        <!-- 最終揭曉與策展人介紹 -->
-        <div id="final-reveal" class="interactive">
-            <h1 class="grand-title">花間鏡像：十二紀元的霓裳夢迴</h1>
-            <div class="curator-section">
-                <div class="curator-header"><div class="line"></div><h2>策展人</h2><div class="line"></div></div>
-                <div class="curator-profiles">
-                    <div class="profile">
-                        <div class="avatar-ring">
-                            <!-- 請將照片命名為 tu.jpg 放入資料夾 -->
-                            <img src="tu.jpg" alt="涂聿萱" onerror="this.src='https://placehold.co/400x400/2a0505/d4af37?text=涂'">
-                        </div>
-                        <h3>涂聿萱</h3>
-                        <p>互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。</p>
-                    </div>
-                    <div class="profile">
-                        <div class="avatar-ring">
-                            <!-- 請將照片命名為 liao.jpg 放入資料夾 -->
-                            <img src="liao.jpg" alt="廖冠皓" onerror="this.src='https://placehold.co/400x400/2a0505/d4af37?text=廖'">
-                        </div>
-                        <h3>廖冠皓</h3>
-                        <p>核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。</p>
-                    </div>
-                </div>
-            </div>
-            <!-- ThingLink 傳送門 -->
-            <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="enter-portal-btn interactive">進入全景世界</a>
-        </div>
-    </div>
-
-    <!-- 開場大門 -->
     <div id="gate-container">
         <div class="door door-left"><div class="door-ring"></div></div>
         <div class="door door-right"><div class="door-ring"></div></div>
         
-        <div class="gate-action-area interactive" onclick="startCinematic()" ontouchstart="startCinematic()">
+        <div class="gate-action-area" onclick="startCinematic()" ontouchstart="startCinematic()">
             <svg class="gate-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C12 2 5 6 5 13C5 17 8 20 12 22C16 20 19 17 19 13C19 6 12 2 12 2Z" />
                 <path d="M12 22C12 22 17 18 17 13C17 9 14 6 12 4C10 6 7 9 7 13C7 18 12 22 12 22Z" />
                 <circle cx="12" cy="15" r="2" fill="currentColor" stroke="none"/>
             </svg>
-            <div class="gate-text">推開大觀園</div>
+            <div class="gate-text">推開花世界</div>
         </div>
     </div>
 
+    <div id="cinematic-sequence">
+        <div class="quote" id="q0">
+            <span class="quote-main">太虛幻境，大夢初醒。</span>
+        </div>
+        <div class="quote" id="q1">
+            <span class="quote-main">百花有靈，神韻天成。</span>
+            <span class="quote-sub">十二花神，以花為名，以詩傳情</span>
+        </div>
+        <div class="quote" id="q2">
+            <span class="quote-main">對自然之美與生命之頌。</span>
+        </div>
+        <div class="quote" id="q3">
+            <span class="quote-main">願您在花神的陪伴下，<br>遇見詩憶，遇見美好。</span>
+        </div>
+    </div>
+
+    <!-- 最終揭曉 (包含高質感策展人方塊) -->
+    <div id="final-reveal">
+        <h1 class="grand-title">花間鏡像：十二紀元的霓裳夢迴</h1>
+        
+        <div class="curator-section">
+            <div class="curator-header">
+                <div class="line"></div>
+                <h2>策展人</h2>
+                <div class="line"></div>
+            </div>
+            
+            <div class="curator-profiles">
+                <!-- 涂聿萱 -->
+                <div class="profile">
+                    <div class="avatar-ring">
+                        <img src="tu.jpg" alt="涂聿萱" onerror="this.src='https://placehold.co/400x400/1a0a0a/d4af37?text=涂'">
+                    </div>
+                    <h3>涂聿萱</h3>
+                    <p>互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。</p>
+                </div>
+                
+                <!-- 廖冠皓 -->
+                <div class="profile">
+                    <div class="avatar-ring">
+                        <img src="liao.jpg" alt="廖冠皓" onerror="this.src='https://placehold.co/400x400/1a0a0a/d4af37?text=廖'">
+                    </div>
+                    <h3>廖冠皓</h3>
+                    <p>核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。</p>
+                </div>
+            </div>
+        </div>
+
+        <a href="https://www.thinglink.com/scene/2116467293566272165" target="_blank" class="enter-portal-btn">
+            進入全景世界
+        </a>
+    </div>
+
+    <!-- ================= Three.js 強力穿梭系統 ================= -->
     <script>
         let scene, camera, renderer, controls;
-        let petals = []; 
-        let dustParticles;
+        let petals = [];
         let isAutoRotating = true;
+        let hasStarted = false;
         
+        let isWarping = false;
+
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
             
             scene = new THREE.Scene();
-            // 預設深色氛圍底色
-            scene.background = new THREE.Color(0x110202); 
-            scene.fog = new THREE.FogExp2(0x110202, 0.0012); 
+            scene.fog = new THREE.FogExp2(0x0a0505, 0.002);
 
-            /* 
-             * 【您的專屬背景圖載入區塊】
-             * 請將您的 360 度全景圖或一般高畫質圖片命名為 palace_bg.jpg，
-             * 並與此 html 檔案放在同一個資料夾。
-             * 程式會自動將它貼成背景，若找不到圖片，則會平滑回落到上面的預設暗紅色背景。
-             */
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load('palace_bg.jpg', 
-                function(texture) {
-                    // 若是 360 度全景圖片 (Equirectangular)，使用這行讓它環繞四周
-                    texture.mapping = THREE.EquirectangularReflectionMapping;
-                    texture.encoding = THREE.sRGBEncoding; // 確保您上傳的宮廷背景色彩飽和不失真
-                    scene.background = texture;
-                },
-                undefined,
-                function(err) {
-                    console.log('未偵測到 palace_bg.jpg，將使用預設的純色深紅背景。');
-                }
-            );
-
-            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 3000);
-            camera.position.set(0, 0, 0.1); 
+            // ================= 強化穿梭感 1：超廣角起始 =================
+            // 起始 FOV 設為 110 度，製造強烈隧道變形感
+            camera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 2000);
+            
+            // 將鏡頭退到極致邊緣 (球體半徑 500，退到 Z=450)
+            camera.position.set(0, 0, 450); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.outputEncoding = THREE.sRGBEncoding; 
             container.appendChild(renderer.domElement);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableZoom = false; 
             controls.enablePan = false;
             controls.enableDamping = true; 
-            controls.dampingFactor = 0.04;
+            controls.dampingFactor = 0.05;
             controls.autoRotate = true;
-            controls.autoRotateSpeed = 0.4; // 非常緩慢的環顧
-            controls.addEventListener('start', () => { isAutoRotating = false; }); 
+            controls.autoRotateSpeed = 0.6; 
+            controls.addEventListener('start', () => { isAutoRotating = false; });
 
-            const ambientLight = new THREE.AmbientLight(0xffcccc, 0.2); 
+            const textureLoader = new THREE.TextureLoader();
+            // 修改背景圖的檔案名稱為 1.png
+            textureLoader.load('1.png', 
+                function(texture) {
+                    texture.mapping = THREE.EquirectangularReflectionMapping;
+                    texture.encoding = THREE.sRGBEncoding;
+                    const sphereGeo = new THREE.SphereGeometry(500, 60, 40);
+                    const sphereMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+                    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+                    sphere.rotation.y = Math.PI; 
+                    scene.add(sphere);
+                },
+                undefined,
+                function(err) {
+                    scene.background = new THREE.Color(0x1a0a0a);
+                }
+            );
+
+            const ambientLight = new THREE.AmbientLight(0xffcccc, 0.8);
             scene.add(ambientLight);
-            
-            // 主光源：穹頂灑下的金光
-            const topLight = new THREE.DirectionalLight(0xd4af37, 1.5);
-            topLight.position.set(0, 200, 0);
-            scene.add(topLight);
-            
-            // 側光源：燈籠的暗紅光
-            const sideLight = new THREE.DirectionalLight(0x8a1313, 2);
-            sideLight.position.set(-100, 0, -100);
-            scene.add(sideLight);
+            const directionalLight = new THREE.DirectionalLight(0xffd700, 1);
+            directionalLight.position.set(100, 100, 50);
+            scene.add(directionalLight);
 
-            // 生成花瓣與金箔 (保留這兩個最受歡迎的特效)
             create3DPetals();
-            createGoldDust();
 
             window.addEventListener('resize', onWindowResize, false);
             animate();
@@ -375,92 +449,70 @@
 
         function create3DPetals() {
             const canvas = document.createElement('canvas');
-            canvas.width = 128; canvas.height = 128;
+            canvas.width = 64; canvas.height = 64;
             const ctx = canvas.getContext('2d');
             
             ctx.beginPath();
-            ctx.moveTo(64, 10);
-            ctx.bezierCurveTo(100, 10, 118, 50, 64, 118);
-            ctx.bezierCurveTo(10, 50, 28, 10, 64, 10);
+            ctx.moveTo(32, 5);
+            ctx.bezierCurveTo(50, 5, 59, 25, 32, 59);
+            ctx.bezierCurveTo(5, 25, 14, 5, 32, 5);
             
-            const grad = ctx.createLinearGradient(64, 10, 64, 118);
-            grad.addColorStop(0, '#ffffff');
+            const grad = ctx.createLinearGradient(32, 5, 32, 59);
+            grad.addColorStop(0, '#ffffff'); 
             grad.addColorStop(0.5, '#f48fb1'); 
-            grad.addColorStop(1, '#8a1313');
+            grad.addColorStop(1, '#c2185b'); 
             
             ctx.fillStyle = grad; ctx.fill();
 
             const texture = new THREE.CanvasTexture(canvas);
-            texture.encoding = THREE.sRGBEncoding;
-
             const material = new THREE.MeshPhysicalMaterial({
-                map: texture, side: THREE.DoubleSide, transparent: true, opacity: 0.9,
-                roughness: 0.4, metalness: 0.2, clearcoat: 0.3, alphaTest: 0.1
+                map: texture, side: THREE.DoubleSide, transparent: true, opacity: 0.85,
+                roughness: 0.5, metalness: 0.1, alphaTest: 0.1
             });
 
-            const geometry = new THREE.PlaneGeometry(5, 5, 2, 2);
+            const geometry = new THREE.PlaneGeometry(4, 4, 2, 2);
             const positions = geometry.attributes.position;
             for(let i=0; i<positions.count; i++) {
                 const x = positions.getX(i); const y = positions.getY(i);
-                positions.setZ(i, (x*x + y*y) * -0.06); 
+                positions.setZ(i, (x*x + y*y) * -0.05);
             }
             geometry.computeVertexNormals();
 
-            // 手機版自動減少花瓣數量以確保順暢
-            const petalCount = window.innerWidth < 768 ? 400 : 900; 
+            const isMobile = window.innerWidth < 768;
+            const petalCount = isMobile ? 300 : 800; 
 
             for (let i = 0; i < petalCount; i++) {
                 const petal = new THREE.Mesh(geometry, material);
-                // 分佈在宮殿空間中
-                const r = 50 + Math.random() * 400; 
+                
+                const r = 30 + Math.random() * 400;
                 const theta = 2 * Math.PI * Math.random();
                 const phi = Math.acos(2 * Math.random() - 1);
                 
                 petal.position.x = r * Math.sin(phi) * Math.cos(theta);
                 petal.position.y = r * Math.sin(phi) * Math.sin(theta);
                 petal.position.z = r * Math.cos(phi);
+
                 petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
                 
                 const scale = 0.5 + Math.random() * 1.5;
                 petal.scale.set(scale, scale, scale);
 
                 petal.userData = {
-                    rotX: (Math.random() - 0.5) * 0.03, rotY: (Math.random() - 0.5) * 0.03, rotZ: (Math.random() - 0.5) * 0.03,
-                    fall: 0.2 + Math.random() * 0.4, drift: (Math.random() - 0.5) * 0.15, orbit: (Math.random() - 0.5) * 0.002
+                    rotX: (Math.random() - 0.5) * 0.05,
+                    rotY: (Math.random() - 0.5) * 0.05,
+                    rotZ: (Math.random() - 0.5) * 0.05,
+                    fallSpeed: 0.1 + Math.random() * 0.3,
+                    driftSpeed: (Math.random() - 0.5) * 0.15,
+                    orbitSpeed: (Math.random() - 0.5) * 0.002
                 };
-                petals.push(petal); scene.add(petal);
-            }
-        }
 
-        function createGoldDust() {
-            const dustCount = window.innerWidth < 768 ? 600 : 1500;
-            const geometry = new THREE.BufferGeometry();
-            const positions = [];
-            
-            for (let i = 0; i < dustCount; i++) {
-                positions.push(
-                    (Math.random() - 0.5) * 800,
-                    (Math.random() - 0.5) * 800,
-                    (Math.random() - 0.5) * 800
-                );
+                petals.push(petal);
+                scene.add(petal);
             }
-            
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            
-            const material = new THREE.PointsMaterial({
-                color: 0xd4af37, // 鎏金色
-                size: 2.0,
-                transparent: true,
-                opacity: 0.6,
-                blending: THREE.AdditiveBlending
-            });
-            
-            dustParticles = new THREE.Points(geometry, material);
-            scene.add(dustParticles);
         }
 
         function onWindowResize() {
-            if(camera) {
+            if(camera && renderer) {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -470,35 +522,54 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            petals.forEach(petal => {
-                const d = petal.userData;
-                petal.rotation.x += d.rotX; petal.rotation.y += d.rotY; petal.rotation.z += d.rotZ;
-                petal.position.y -= d.fall; petal.position.x += d.drift;
+            // ================= 強化穿梭感 2：動態運鏡 =================
+            if (isWarping && camera) {
+                // 加快推進速度
+                camera.position.z += (0.1 - camera.position.z) * 0.005;
                 
-                const x = petal.position.x; const z = petal.position.z;
-                petal.position.x = x * Math.cos(d.orbit) - z * Math.sin(d.orbit);
-                petal.position.z = x * Math.sin(d.orbit) + z * Math.cos(d.orbit);
+                // 動態視野煞車：從廣角 110 度緩慢且平滑地收斂到正常的 70 度
+                if (camera.fov > 70) {
+                    camera.fov += (70 - camera.fov) * 0.008;
+                    camera.updateProjectionMatrix();
+                }
+            }
 
-                if (petal.position.y < -250) {
-                    petal.position.y = 250; 
-                    petal.position.x = (Math.random() - 0.5) * 400; 
-                    petal.position.z = (Math.random() - 0.5) * 400;
+            petals.forEach(petal => {
+                const data = petal.userData;
+                petal.rotation.x += data.rotX;
+                petal.rotation.y += data.rotY;
+                petal.rotation.z += data.rotZ;
+                
+                petal.position.y -= data.fallSpeed;
+                petal.position.x += data.driftSpeed;
+
+                // ================= 強化穿梭感 3：花瓣瘋狂湧現 =================
+                if (isWarping) {
+                    // 根據相機距離，製造強烈的迎面而來速度感
+                    let warpSpeed = Math.max(1.0, camera.position.z * 0.015);
+                    petal.position.z += warpSpeed; 
+                }
+                
+                const x = petal.position.x;
+                const z = petal.position.z;
+                petal.position.x = x * Math.cos(data.orbitSpeed) - z * Math.sin(data.orbitSpeed);
+                petal.position.z = x * Math.sin(data.orbitSpeed) + z * Math.cos(data.orbitSpeed);
+
+                // 強化無縫輪迴，確保穿梭時永遠有花瓣撞擊鏡頭
+                if (petal.position.y < -200 || petal.position.z > camera.position.z + 100) {
+                    petal.position.y = 200 + Math.random() * 100;
+                    petal.position.x = (Math.random() - 0.5) * 600;
+                    // 如果正在穿梭，花瓣從極深的遠方重新生成
+                    petal.position.z = isWarping ? camera.position.z - 500 - Math.random()*200 : (Math.random() - 0.5) * 400 - 200;
                 }
             });
-
-            if(dustParticles) {
-                dustParticles.rotation.y += 0.0003;
-                dustParticles.rotation.x += 0.0001;
-            }
 
             if(isAutoRotating && controls) controls.update(); 
             if(renderer && scene && camera) renderer.render(scene, camera);
         }
 
-        let hasStarted = false;
-
         window.onload = () => {
-            initThreeJS(); 
+            initThreeJS();
         };
 
         function startCinematic(e) {
@@ -513,39 +584,54 @@
                 playPromise.then(_ => {
                     let vol = 0;
                     let fadeAudio = setInterval(() => {
-                        if (vol < 0.6) { vol = Math.min(0.6, vol + 0.05); bgMusic.volume = vol; } 
-                        else { clearInterval(fadeAudio); }
+                        if (vol < 0.6) {
+                            vol = Math.min(0.6, vol + 0.05);
+                            bgMusic.volume = vol;
+                        } else {
+                            clearInterval(fadeAudio);
+                        }
                     }, 200);
-                }).catch(e => console.log("瀏覽器阻擋自動播放音樂", e));
+                }).catch(error => { console.log("Audio play prevented"); });
             }
+
+            document.getElementById('canvas-container').style.opacity = '1';
 
             const gate = document.getElementById('gate-container');
             gate.classList.add('opened');
-            document.getElementById('canvas-container').style.opacity = '1';
-            document.getElementById('p-frame').style.opacity = '1';
-            
             setTimeout(() => gate.classList.add('fade-out'), 2000);
             setTimeout(() => { gate.style.display = 'none'; }, 4000);
 
-            const q0 = document.getElementById('q0'); const q1 = document.getElementById('q1');
-            const q2 = document.getElementById('q2'); const q3 = document.getElementById('q3');
+            // 啟動 3D 極速穿梭運鏡
+            isWarping = true;
+
+            const q0 = document.getElementById('q0');
+            const q1 = document.getElementById('q1');
+            const q2 = document.getElementById('q2');
+            const q3 = document.getElementById('q3');
             const finalReveal = document.getElementById('final-reveal');
 
-            // 時間軸排程
             setTimeout(() => { q0.classList.add('fly-through'); }, 500);
             setTimeout(() => { q1.classList.add('fly-through'); }, 11500);
             setTimeout(() => { q2.classList.add('fly-through'); }, 21000);
             setTimeout(() => { q3.classList.add('fly-through'); }, 30500);
             
-            // 第 40 秒最終揭曉
-            setTimeout(() => { finalReveal.classList.add('active'); }, 40000); 
+            setTimeout(() => {
+                finalReveal.classList.add('active');
+                // 停止穿梭，回歸完美的 360 環景，視野已平滑收回 70 度
+                isWarping = false; 
+            }, 40000); 
 
-            // ===== 第 55 秒背景音樂優雅淡出並停止 =====
             setTimeout(() => {
                 let currentVol = bgMusic.volume;
                 let fadeOutAudio = setInterval(() => {
-                    if (currentVol > 0.05) { currentVol -= 0.05; bgMusic.volume = currentVol; } 
-                    else { bgMusic.volume = 0; bgMusic.pause(); clearInterval(fadeOutAudio); }
+                    if (currentVol > 0.05) {
+                        currentVol -= 0.05; 
+                        bgMusic.volume = currentVol;
+                    } else {
+                        bgMusic.volume = 0; 
+                        bgMusic.pause();    
+                        clearInterval(fadeOutAudio); 
+                    }
                 }, 200); 
             }, 55000); 
         }
