@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
-    <!-- 思源宋體 -->
+    <!-- 思源宋體 (字重 300, 400, 700, 900) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700;900&display=swap" rel="stylesheet">
@@ -130,83 +130,98 @@
             .gate-action-area:hover .gate-text { text-shadow: 0 0 25px var(--gold); color: #fff;}
         }
 
+        /* 開門動畫設定 */
         #gate-container.opened .door-left { transform: rotateY(-105deg) translateZ(0); }
         #gate-container.opened .door-right { transform: rotateY(105deg) translateZ(0); }
         #gate-container.opened .gate-action-area { opacity: 0; pointer-events: none; transform: scale(1.2); }
         #gate-container.opened { transform: scale(1.2); } 
         #gate-container.fade-out { opacity: 0; pointer-events: none; }
 
-        /* ================= 電影引言 (3D 強化穿透運鏡) ================= */
+        /* ================= 電影引言 (完美防爆框運鏡) ================= */
         #cinematic-sequence {
             position: absolute; inset: 0; z-index: 10;
             display: flex; justify-content: center; align-items: center;
             pointer-events: none; 
             transform-style: preserve-3d;
-            perspective: 800px;
+            perspective: 1000px; /* 增加透視距離，讓景深更穩定 */
         }
 
         .quote {
             position: absolute; text-align: center; width: 90%; max-width: 900px;
-            opacity: 0; transform: translateZ(-1200px); /* 從更深處飛來 */
+            opacity: 0; transform: translateZ(-1500px); /* 從極深處飛來 */
             will-change: transform, opacity;
-            display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+            display: flex; flex-direction: column; align-items: center; gap: 1.2rem;
         }
 
+        /* 手機版：縮小字體與字距，防止超出邊界 */
         .quote-main {
-            font-size: 1.6rem; font-weight: 900; color: #fff;
-            letter-spacing: 0.6rem; margin-right: -0.6rem; line-height: 2;
+            font-size: 1.25rem; font-weight: 900; color: #fff;
+            letter-spacing: 0.25rem; margin-right: -0.25rem; line-height: 1.8;
+            word-break: keep-all; /* 防止單字被奇異切斷 */
             text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.8), 0 0 40px rgba(212,175,55,0.4);
         }
         
         .quote-sub {
-            font-size: 0.9rem; color: var(--gold-light); font-weight: 400;
-            letter-spacing: 0.4rem; margin-right: -0.4rem; opacity: 0.9;
+            font-size: 0.85rem; color: var(--gold-light); font-weight: 400;
+            letter-spacing: 0.2rem; margin-right: -0.2rem; opacity: 0.9;
             text-shadow: 0 2px 5px rgba(0,0,0,0.9);
         }
 
+        /* 電腦版：恢復霸氣大字 */
         @media (min-width: 768px) {
-            .quote-main { font-size: 3rem; letter-spacing: 1rem; margin-right: -1rem; line-height: 2.2; }
+            .quote { gap: 1.5rem; }
+            .quote-main { font-size: 3rem; letter-spacing: 0.8rem; margin-right: -0.8rem; line-height: 2.2; }
             .quote-sub { font-size: 1.2rem; letter-spacing: 0.6rem; margin-right: -0.6rem; }
         }
 
-        /* 3D 迎面爆發穿梭特效 */
+        /* 3D 迎面爆發穿梭特效：修改透明度變化，確保放大超出螢幕前已完全消失 */
         .fly-through {
             animation: text3DWarp 9s forwards cubic-bezier(0.25, 1, 0.4, 1);
         }
 
         @keyframes text3DWarp {
-            0%   { opacity: 0; transform: translateZ(-1200px) translateY(20px); filter: blur(15px); }
-            20%  { opacity: 1; transform: translateZ(-300px) translateY(0); filter: blur(0px); }
-            70%  { opacity: 1; transform: translateZ(200px) translateY(0); filter: blur(0px); }
-            100% { opacity: 0; transform: translateZ(1000px) translateY(-30px); filter: blur(20px); } /* 直接穿過螢幕 */
+            0%   { opacity: 0; transform: translateZ(-1500px) translateY(20px); filter: blur(20px); }
+            20%  { opacity: 1; transform: translateZ(-400px) translateY(0); filter: blur(0px); }
+            60%  { opacity: 1; transform: translateZ(50px) translateY(0); filter: blur(0px); }
+            /* 關鍵修改：在推進到 350px 時就完全透明消失，絕對不會爆框 */
+            85%  { opacity: 0; transform: translateZ(350px) translateY(-15px); filter: blur(15px); } 
+            100% { opacity: 0; transform: translateZ(600px) translateY(-30px); filter: blur(30px); } 
         }
 
         /* ================= 最終揭曉 & 策展團隊 ================= */
         #final-reveal {
             position: absolute; inset: 0; z-index: 20;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 4s ease;
             background: radial-gradient(circle at center, rgba(10,8,5,0.75) 0%, rgba(3,2,2,0.95) 100%);
-            padding: 2rem 1rem; overflow-y: auto; 
+            padding: 10vh 1rem 5vh 1rem; 
+            overflow-y: auto; overflow-x: hidden;
+        }
+        @media (min-width: 768px) {
+            #final-reveal { justify-content: center; padding: 2rem; }
         }
         #final-reveal.active { opacity: 1; pointer-events: auto; }
 
         .grand-title {
-            font-size: 1.6rem; font-weight: 900; text-align: center;
-            letter-spacing: 0.5rem; margin-right: -0.5rem; margin-bottom: 2.5rem;
+            font-size: 1.4rem; font-weight: 900; text-align: center;
+            letter-spacing: 0.3rem; margin-right: -0.3rem; margin-bottom: 2.5rem;
             color: var(--gold-light);
             text-shadow: 0 0 30px rgba(212, 175, 55, 0.5), 0 5px 15px rgba(0,0,0,0.8);
             opacity: 0; transform: translateY(20px); transition: all 3s ease 1s;
-            white-space: nowrap; 
+            line-height: 1.6;
+            white-space: normal; 
+            width: 100%;
         }
         @media (min-width: 768px) {
-            .grand-title { font-size: 3.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; margin-bottom: 4rem; }
+            .grand-title { 
+                font-size: 3.5rem; letter-spacing: 1.5rem; margin-right: -1.5rem; 
+                margin-bottom: 4rem; white-space: nowrap; 
+            }
         }
         #final-reveal.active .grand-title { opacity: 1; transform: translateY(0); }
 
-        /* 高質感毛玻璃方塊包覆 */
         .curator-section {
-            width: 92%; max-width: 850px;
+            width: 100%; max-width: 850px;
             display: flex; flex-direction: column; align-items: center;
             opacity: 0; transform: translateY(20px); transition: all 3s ease 2s;
             margin-bottom: 2rem;
@@ -279,13 +294,14 @@
 
         .enter-portal-btn {
             position: relative; overflow: hidden; flex-shrink: 0;
-            padding: 1.2rem 3rem; border: 1px solid var(--gold);
+            padding: 1.2rem 2.5rem; border: 1px solid var(--gold);
             background: rgba(212, 175, 55, 0.1); color: #fff;
-            font-size: 1.1rem; font-weight: 900; letter-spacing: 0.4rem; margin-right: -0.4rem;
+            font-size: 1.1rem; font-weight: 900; letter-spacing: 0.3rem; margin-right: -0.3rem;
             border-radius: 100px; text-decoration: none; backdrop-filter: blur(5px);
             transition: all 0.6s ease;
             opacity: 0; transform: translateY(20px); transition: all 3s ease 3s;
             margin-bottom: 2rem;
+            text-align: center;
         }
         @media (min-width: 768px) {
             .enter-portal-btn { padding: 1.5rem 5rem; font-size: 1.3rem; letter-spacing: 0.8rem; margin-right: -0.8rem; }
@@ -310,9 +326,11 @@
         <source src="bgm.mp3" type="audio/mpeg">
     </audio>
 
+    <!-- 3D 畫布 -->
     <div id="canvas-container"></div>
     <div class="vignette"></div>
 
+    <!-- 開場大門 -->
     <div id="gate-container">
         <div class="door door-left"><div class="door-ring"></div></div>
         <div class="door door-right"><div class="door-ring"></div></div>
@@ -327,6 +345,7 @@
         </div>
     </div>
 
+    <!-- 絕對防爆框的電影引言 -->
     <div id="cinematic-sequence">
         <div class="quote" id="q0">
             <span class="quote-main">太虛幻境，大夢初醒。</span>
@@ -361,7 +380,7 @@
                         <img src="tu.jpg" alt="涂聿萱" onerror="this.src='https://placehold.co/400x400/1a0a0a/d4af37?text=涂'">
                     </div>
                     <h3>涂聿萱</h3>
-                    <p>互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。</p>
+                    <p>核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。</p>
                 </div>
                 
                 <!-- 廖冠皓 -->
@@ -370,7 +389,7 @@
                         <img src="liao.jpg" alt="廖冠皓" onerror="this.src='https://placehold.co/400x400/1a0a0a/d4af37?text=廖'">
                     </div>
                     <h3>廖冠皓</h3>
-                    <p>核心視覺概念設計與總體統籌。<br>以細膩視角解構古典文學，將紅樓夢的十二花神轉化為數位時代的視覺饗宴。</p>
+                    <p>互動體驗設計與空間氛圍營造。<br>擅長結合傳統敘事與現代數位科技，編織出如夢似幻的大觀園沉浸式場景。</p>
                 </div>
             </div>
         </div>
@@ -388,6 +407,7 @@
         let hasStarted = false;
         
         let isWarping = false;
+        let bgSphere; // 用於儲存背景球體，創造旋轉漩渦感
 
         function initThreeJS() {
             const container = document.getElementById('canvas-container');
@@ -395,12 +415,12 @@
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0a0505, 0.002);
 
-            // ================= 強化穿梭感 1：超廣角起始 =================
-            // 起始 FOV 設為 110 度，製造強烈隧道變形感
-            camera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 0.1, 2000);
+            // ================= 強化穿梭感 1：極限超廣角起始 =================
+            // 起始 FOV 設為 140 度，製造最強烈的星際隧道變形感
+            camera = new THREE.PerspectiveCamera(140, window.innerWidth / window.innerHeight, 0.1, 2000);
             
-            // 將鏡頭退到極致邊緣 (球體半徑 500，退到 Z=450)
-            camera.position.set(0, 0, 450); 
+            // 將鏡頭退到貼緊球體牆壁 (球體半徑 500，退到 Z=490)
+            camera.position.set(0, 0, 490); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -418,16 +438,15 @@
             controls.addEventListener('start', () => { isAutoRotating = false; });
 
             const textureLoader = new THREE.TextureLoader();
-            // 修改背景圖的檔案名稱為 1.png
             textureLoader.load('1.png', 
                 function(texture) {
                     texture.mapping = THREE.EquirectangularReflectionMapping;
                     texture.encoding = THREE.sRGBEncoding;
                     const sphereGeo = new THREE.SphereGeometry(500, 60, 40);
                     const sphereMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
-                    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-                    sphere.rotation.y = Math.PI; 
-                    scene.add(sphere);
+                    bgSphere = new THREE.Mesh(sphereGeo, sphereMat);
+                    bgSphere.rotation.y = Math.PI; 
+                    scene.add(bgSphere);
                 },
                 undefined,
                 function(err) {
@@ -522,15 +541,20 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            // ================= 強化穿梭感 2：動態運鏡 =================
+            // ================= 強化穿梭感 2：極致平滑的減速拋物線 =================
             if (isWarping && camera) {
-                // 加快推進速度
-                camera.position.z += (0.1 - camera.position.z) * 0.005;
+                // 緩慢而綿長的推近，創造長達 30 秒以上的飛行體驗
+                camera.position.z += (0.1 - camera.position.z) * 0.003;
                 
-                // 動態視野煞車：從廣角 110 度緩慢且平滑地收斂到正常的 70 度
+                // 動態視野煞車：從超廣角 140 度平滑收斂到 70 度
                 if (camera.fov > 70) {
-                    camera.fov += (70 - camera.fov) * 0.008;
+                    camera.fov += (70 - camera.fov) * 0.003;
                     camera.updateProjectionMatrix();
+                }
+
+                // 時空漩渦：讓全景背景輕微自轉，強化暈眩與穿梭感
+                if (bgSphere) {
+                    bgSphere.rotation.y += 0.0015;
                 }
             }
 
@@ -538,16 +562,19 @@
                 const data = petal.userData;
                 petal.rotation.x += data.rotX;
                 petal.rotation.y += data.rotY;
-                petal.rotation.z += data.rotZ;
                 
                 petal.position.y -= data.fallSpeed;
                 petal.position.x += data.driftSpeed;
 
-                // ================= 強化穿梭感 3：花瓣瘋狂湧現 =================
+                // ================= 強化穿梭感 3：花瓣迎面極速爆發 =================
                 if (isWarping) {
-                    // 根據相機距離，製造強烈的迎面而來速度感
-                    let warpSpeed = Math.max(1.0, camera.position.z * 0.015);
+                    // 根據相機距離，花瓣以極高速度衝向鏡頭
+                    let warpSpeed = Math.max(1.5, camera.position.z * 0.015);
                     petal.position.z += warpSpeed; 
+                    // 增加劇烈翻滾的氣流感
+                    petal.rotation.z += 0.05; 
+                } else {
+                    petal.rotation.z += data.rotZ;
                 }
                 
                 const x = petal.position.x;
@@ -555,16 +582,15 @@
                 petal.position.x = x * Math.cos(data.orbitSpeed) - z * Math.sin(data.orbitSpeed);
                 petal.position.z = x * Math.sin(data.orbitSpeed) + z * Math.cos(data.orbitSpeed);
 
-                // 強化無縫輪迴，確保穿梭時永遠有花瓣撞擊鏡頭
-                if (petal.position.y < -200 || petal.position.z > camera.position.z + 100) {
+                // 強化無縫輪迴，穿梭時花瓣從極深的遠方重新生成
+                if (petal.position.y < -200 || petal.position.z > camera.position.z + 50) {
                     petal.position.y = 200 + Math.random() * 100;
                     petal.position.x = (Math.random() - 0.5) * 600;
-                    // 如果正在穿梭，花瓣從極深的遠方重新生成
-                    petal.position.z = isWarping ? camera.position.z - 500 - Math.random()*200 : (Math.random() - 0.5) * 400 - 200;
+                    petal.position.z = isWarping ? camera.position.z - 600 - Math.random()*300 : (Math.random() - 0.5) * 400 - 200;
                 }
             });
 
-            if(isAutoRotating && controls) controls.update(); 
+            if(isAutoRotating && controls && !isWarping) controls.update(); 
             if(renderer && scene && camera) renderer.render(scene, camera);
         }
 
@@ -610,6 +636,7 @@
             const q3 = document.getElementById('q3');
             const finalReveal = document.getElementById('final-reveal');
 
+            // 完美錯開的時間軸 (保證絕不重疊)
             setTimeout(() => { q0.classList.add('fly-through'); }, 500);
             setTimeout(() => { q1.classList.add('fly-through'); }, 11500);
             setTimeout(() => { q2.classList.add('fly-through'); }, 21000);
@@ -617,10 +644,11 @@
             
             setTimeout(() => {
                 finalReveal.classList.add('active');
-                // 停止穿梭，回歸完美的 360 環景，視野已平滑收回 70 度
+                // 抵達中心點，停止穿梭，回歸完美的 360 環景，視野已平滑收回 70 度
                 isWarping = false; 
             }, 40000); 
 
+            // 第 55 秒音樂自動淡出
             setTimeout(() => {
                 let currentVol = bgMusic.volume;
                 let fadeOutAudio = setInterval(() => {
